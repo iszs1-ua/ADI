@@ -123,6 +123,8 @@ h1, h2, h3 {
     color: var(--color-primary);
 }
 
+
+
 /* --------------------
    HabitCard Component (BEM: habit-card)
    -------------------- */
@@ -858,4 +860,14 @@ h1, h2, h3 {
 .calendar__month-cell--missed,
 .calendar__quarter-cell--missed {
     background-color: #f5a623;
+}
+
+
+.habit-card__button--delete {
+    background-color: #e74c3c; /* rojo */
+    color: #fff;
+}
+
+.habit-card__button--delete:hover {
+    background-color: #c0392b;
 }
