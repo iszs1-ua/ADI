@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker - Perfil de Usuario</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header" data-component="SiteHeader">
+        <div class="site-header__logo">
+            <h1>Habit Tracker</h1>
+        </div>
+        <nav class="site-header__nav" data-component="SiteNav">
+            <ul class="site-header__nav-list">
+                <li class="site-header__nav-item">
+                    <a href="index.html" class="site-header__nav-link" data-nav="dashboard">Dashboard</a>
+                </li>
+                <li class="site-header__nav-item">
+                    <a href="habitos.html" class="site-header__nav-link" data-nav="habits">Hábitos</a>
+                </li>
+                <li class="site-header__nav-item">
+                    <a href="perfil.html" class="site-header__nav-link site-header__nav-link--active" data-nav="profile">Perfil</a>
+                </li>
+                <li class="site-header__nav-item">
+                    <a href="login.html" class="site-header__nav-link" data-nav="auth">Login</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="outlet" data-outlet>
+        <section class="user-profile" data-component="UserProfile">
+            <div class="user-profile__header">
+                <img src="https://via.placeholder.com/150" alt="Avatar del usuario" class="user-profile__avatar">
+                <div class="user-profile__info">
+                    <h2 class="user-profile__name">Juan Pérez</h2>
+                    <p class="user-profile__email">juan.perez@example.com</p>
+                    <p class="user-profile__join-date">Miembro desde: Enero 2024</p>
+                </div>
+                <button class="user-profile__edit-button">Editar Perfil</button>
+            </div>
+            
+            <div class="user-profile__stats">
+                <div class="user-profile__stat-item">
+                    <h3 class="user-profile__stat-value">12</h3>
+                    <p class="user-profile__stat-label">Hábitos Creados</p>
+                </div>
+                <div class="user-profile__stat-item">
+                    <h3 class="user-profile__stat-value">45</h3>
+                    <p class="user-profile__stat-label">Días de Racha</p>
+                </div>
+                <div class="user-profile__stat-item">
+                    <h3 class="user-profile__stat-value">95%</h3>
+                    <p class="user-profile__stat-label">Tasa de Finalización</p>
+                </div>
+            </div>
+
+            <div class="user-profile__section">
+                <h3 class="user-profile__section-heading">Hábitos Destacados</h3>
+                <div class="user-profile__habit-grid">
+                    <div class="habit-card" data-component="HabitCard">
+                        <div class="habit-card__header">
+                            <h4 class="habit-card__title">Levantarse temprano</h4>
+                            <span class="habit-card__badge">Diario</span>
+                        </div>
+                        <p class="habit-card__description">Mejorar la productividad matutina.</p>
+                        <div class="habit-card__progress">
+                            <span class="habit-card__progress-text">Progreso: 75%</span>
+                            <progress class="habit-card__progress-bar" value="75" max="100"></progress>
+                        </div>
+                    </div>
+
+                    <div class="habit-card" data-component="HabitCard">
+                        <div class="habit-card__header">
+                            <h4 class="habit-card__title">Aprender un idioma</h4>
+                            <span class="habit-card__badge">3 veces/sem</span>
+                        </div>
+                        <p class="habit-card__description">Dedicar 30 minutos a Duolingo.</p>
+                        <div class="habit-card__progress">
+                            <span class="habit-card__progress-text">Progreso: 90%</span>
+                            <progress class="habit-card__progress-bar" value="90" max="100"></progress>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" data-component="SiteFooter">
+        <p class="site-footer__text">© 2025 Habit Tracker. Todos los derechos reservados.</p>
+        <ul class="site-footer__social-list">
+            <li class="site-footer__social-item"><a href="#" class="site-footer__social-link">Twitter</a></li>
+            <li class="site-footer__social-item"><a href="#" class="site-footer__social-link">Instagram</a></li>
+        </ul>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
