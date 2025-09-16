@@ -33,7 +33,8 @@
         <section class="habit-list">
             <h2 class="habit-list__heading">Mis Hábitos</h2>
             <div class="habit-list__grid">
-                <div class="habit-card" data-component="HabitCard">
+                <!-- Hábito 1 -->
+                <div class="habit-card" data-component="HabitCard" data-id="1">
                     <div class="habit-card__header">
                         <h3 class="habit-card__title">Meditación</h3>
                         <span class="habit-card__badge">Diario</span>
@@ -43,13 +44,12 @@
                         <span class="habit-card__progress-text">Progreso: 80%</span>
                         <progress class="habit-card__progress-bar" value="80" max="100"></progress>
                     </div>
-                    <div class="habit-card__actions">
-                        <button class="habit-card__button habit-card__button--completed">Completado</button>
-                        <a href="edit-habit.html" class="habit-card__edit-button" data-nav="edit-habit">Editar</a>
-                    </div>
+                    <button class="habit-card__button habit-card__button--completed">Completado</button>
+                    <a href="edit-habit.html?id=1" class="habit-card__button habit-card__button--edit">Editar</a>
                 </div>
 
-                <div class="habit-card" data-component="HabitCard">
+                <!-- Hábito 2 -->
+                <div class="habit-card" data-component="HabitCard" data-id="2">
                     <div class="habit-card__header">
                         <h3 class="habit-card__title">Leer un libro</h3>
                         <span class="habit-card__badge">Semanal</span>
@@ -59,13 +59,12 @@
                         <span class="habit-card__progress-text">Progreso: 50%</span>
                         <progress class="habit-card__progress-bar" value="50" max="100"></progress>
                     </div>
-                    <div class="habit-card__actions">
-                        <button class="habit-card__button">Marcar como completado</button>
-                        <a href="edit-habit.html" class="habit-card__edit-button" data-nav="edit-habit">Editar</a>
-                    </div>
+                    <button class="habit-card__button">Marcar como completado</button>
+                    <a href="edit-habit.html?id=2" class="habit-card__button habit-card__button--edit">Editar</a>
                 </div>
 
-                <div class="habit-card" data-component="HabitCard">
+                <!-- Hábito 3 -->
+                <div class="habit-card" data-component="HabitCard" data-id="3">
                     <div class="habit-card__header">
                         <h3 class="habit-card__title">Hacer ejercicio</h3>
                         <span class="habit-card__badge">3 veces/sem</span>
@@ -75,10 +74,8 @@
                         <span class="habit-card__progress-text">Progreso: 100%</span>
                         <progress class="habit-card__progress-bar" value="100" max="100"></progress>
                     </div>
-                    <div class="habit-card__actions">
-                        <button class="habit-card__button habit-card__button--completed">Completado</button>
-                        <a href="edit-habit.html" class="habit-card__button habit-card__button--edit">Editar</a>
-                    </div>
+                    <button class="habit-card__button habit-card__button--completed">Completado</button>
+                    <a href="edit-habit.html?id=3" class="habit-card__button habit-card__button--edit">Editar</a>
                 </div>
 
                 <a href="new-habit.html" class="habit-list__add-button" data-nav="new-habit">+ Nuevo Hábito</a>
