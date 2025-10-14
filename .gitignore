@@ -1,0 +1,6 @@
+﻿node_modules/
+pb_data/
+pocketbase_*/
+.env
+dist/
+.DS_Store

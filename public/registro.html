@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Tracker - Registro</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="site-header" data-component="SiteHeader">
+    <div class="site-header__logo">
+      <h1>Habit Tracker</h1>
+    </div>
+    <nav class="site-header__nav" data-component="SiteNav">
+      <ul class="site-header__nav-list">
+        <li class="site-header__nav-item">
+          <a href="index.html" class="site-header__nav-link" data-nav="dashboard">Dashboard</a>
+        </li>
+        <li class="site-header__nav-item">
+          <a href="habitos.html" class="site-header__nav-link" data-nav="habits">Hábitos</a>
+        </li>
+        <li class="site-header__nav-item">
+          <a href="perfil.html" class="site-header__nav-link" data-nav="profile">Perfil</a>
+        </li>
+        <li class="site-header__nav-item">
+          <a href="login.html" class="site-header__nav-link" data-nav="auth">Login</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="outlet" data-outlet>
+    <section class="auth-form" data-component="AuthForm">
+      <h2 class="auth-form__heading">Regístrate</h2>
+      <form class="auth-form__container">
+        <div class="auth-form__field">
+          <label for="username" class="auth-form__label">Nombre de Usuario:</label>
+          <input type="text" id="username" name="username" class="auth-form__input" required />
+        </div>
+        <div class="auth-form__field">
+          <label for="email" class="auth-form__label">Correo Electrónico:</label>
+          <input type="email" id="email" name="email" class="auth-form__input" required />
+        </div>
+        <div class="auth-form__field">
+          <label for="password" class="auth-form__label">Contraseña:</label>
+          <input type="password" id="password" name="password" class="auth-form__input" required />
+        </div>
+        <div class="auth-form__field">
+          <label for="confirm-password" class="auth-form__label">Confirmar Contraseña:</label>
+          <input type="password" id="confirm-password" name="confirm-password" class="auth-form__input" required />
+        </div>
+        <button type="submit" class="auth-form__button">Crear Cuenta</button>
+      </form>
+      <p class="auth-form__switch">
+        ¿Ya tienes una cuenta?
+        <a href="login.html" class="auth-form__link" data-nav="login">Inicia Sesión</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer" data-component="SiteFooter">
+    <p class="site-footer__text">© 2025 Habit Tracker. Todos los derechos reservados.</p>
+    <ul class="site-footer__social-list">
+      <li class="site-footer__social-item"><a href="#" class="site-footer__social-link">Twitter</a></li>
+      <li class="site-footer__social-item"><a href="#" class="site-footer__social-link">Instagram</a></li>
+    </ul>
+  </footer>
+
+  <!-- SDK de PocketBase + tu script de lógica -->
+  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Tracker - Hábitos</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="site-header" data-component="SiteHeader">
+    <div class="site-header__logo">
+      <h1>Habit Tracker</h1>
+    </div>
+    <nav class="site-header__nav" data-component="SiteNav">
+      <ul class="site-header__nav-list">
+        <li class="site-header__nav-item">
+          <a href="index.html" class="site-header__nav-link" data-nav="dashboard">Dashboard</a>
+        </li>
+        <li class="site-header__nav-item">
+          <a href="habitos.html" class="site-header__nav-link" data-nav="habits">Hábitos</a>
+        </li>
+        <li class="site-header__nav-item">
+          <a href="perfil.html" class="site-header__nav-link" data-nav="profile">Perfil</a>
+        </li>
+        <li class="site-header__nav-item">
+          <a href="login.html" class="site-header__nav-link" data-nav="auth">Login</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="outlet" data-outlet>
+    <section class="habit-list" data-component="HabitList">
+      <h2 class="habit-list__heading">Mis Hábitos</h2>
+
+      <div class="habit-list__grid">
+        <!-- Tu script.js insertará aquí las tarjetas dinámicas desde PocketBase -->
+        <a href="new-habit.html" class="habit-list__add-button" data-nav="new-habit">+ Nuevo Hábito</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" data-component="SiteFooter">
+    <p class="site-footer__text">© 2025 Habit Tracker. Todos los derechos reservados.</p>
+    <ul class="site-footer__social-list">
+      <li class="site-footer__social-item"><a href="#" class="site-footer__social-link">Twitter</a></li>
+      <li class="site-footer__social-item"><a href="#" class="site-footer__social-link">Instagram</a></li>
+    </ul>
+  </footer>
+
+  <!-- SDK PocketBase + tu lógica -->
+  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

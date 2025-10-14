@@ -1,0 +1,19 @@
+{
+  "name": "adi-p1-parte2",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "demo:login": "node scripts/demo_login.js",
+    "demo:habits": "node scripts/demo_habits_crud.js",
+    "demo:search": "node scripts/demo_search_paginate.js",
+    "demo:logs": "node scripts/demo_logs.js",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "pocketbase": "^0.21.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
