@@ -74,13 +74,17 @@ Delete de usuario (opcional si queréis cierre redondo del CRUD) ✔
 
 Falta
 
-Editar habitos
+Editar habitos.
+
+Página dasboard bien hecha, solo tiene un png
 
 Búsqueda/filtrado de hábitos (texto y por frecuencia).
 
 Capa de servicios (mover llamadas a HabitService / UserService). Nose que es
 
 Documentación.
+
+Hacer video.
 
 (Recomendado) Reglas RLS + Hook en PocketBase documentadas y activas.
 
