@@ -8,7 +8,7 @@
 
  ✅Persistencia de sesión (la hace el SDK en localStorage).
 
- Logout (botón que llame a pb.authStore.clear() y redirija a /login).
+ ✅Logout (botón que llame a pb.authStore.clear() y redirija a /login).
 
 2) CRUD del recurso principal (hábitos)
 
@@ -41,9 +41,9 @@ Colección: habitos (campos: nombre, descripcion, frecuencia, completado, usuari
 
  ✅Read (mostrar perfil del usuario logeado).
 
- Update (permitir cambiar username o avatar).
+ ✅Update (permitir cambiar username o avatar).
 
- Delete (opcional: botón “Eliminar mi cuenta” → pb.collection('users').delete(id)).
+ ✅Delete (opcional: botón “Eliminar mi cuenta” → pb.collection('users').delete(id)).
 
 Nota: Eliminar usuarios suele requerir privilegios o una Cloud Function. Si no lo queréis, con Update del usuario sería suficiente para marcar CRUD razonable (C+R+U al menos). Si queréis Delete, podéis permitir selfDelete en reglas o hacerlo desde admin con una función.
 
@@ -66,19 +66,21 @@ Mostrar usuario en Perfil e Inicio ✔️
 
 Enlace de edición con ?id= corregido ✔️
 
+Logout visible (botón que limpie auth y redirija) ✔️
+
+Update de usuario (ej. cambiar username en Perfil) ✔
+
+Delete de usuario (opcional si queréis cierre redondo del CRUD) ✔
+
 Falta
 
 Editar habitos
 
-Logout visible (botón que limpie auth y redirija).
-
 Búsqueda/filtrado de hábitos (texto y por frecuencia).
 
-Capa de servicios (mover llamadas a HabitService / UserService).
+Capa de servicios (mover llamadas a HabitService / UserService). Nose que es
 
-Update de usuario (ej. cambiar username en Perfil).
-
-Delete de usuario (opcional si queréis cierre redondo del CRUD).
+Documentación.
 
 (Recomendado) Reglas RLS + Hook en PocketBase documentadas y activas.
 
