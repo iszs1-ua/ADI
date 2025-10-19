@@ -80,7 +80,7 @@ Página dasboard bien hecha, solo tiene un png
 
 Búsqueda/filtrado de hábitos (texto y por frecuencia).
 
-Capa de servicios (mover llamadas a HabitService / UserService). Nose que es
+Capa de servicios. Ahora el front llama a pb directamente. El enunciado pide una capa de servicios (funciones tipo login(email, pass), crearHabito(data), buscarHabitos(q), etc.).
 
 Documentación.
 
