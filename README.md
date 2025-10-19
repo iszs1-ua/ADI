@@ -18,7 +18,7 @@ Colección: habitos (campos: nombre, descripcion, frecuencia, completado, usuari
 
  ✅Listar hábitos del usuario actual (desde habitos).
 
- ✅Editar un hábito por id (desde edit-habit).
+ Editar un hábito por id (desde edit-habit).
 
  ✅Eliminar un hábito por id.
 
