@@ -49,6 +49,9 @@ Nota: Eliminar usuarios suele requerir privilegios o una Cloud Function. Si no l
 
 
 
+
+
+
 Qué tienes hecho vs. qué falta
 
 Hecho
