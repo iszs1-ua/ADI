@@ -20,10 +20,11 @@
           <a href="habitos.html" class="site-header__nav-link" data-nav="habits">Hábitos</a>
         </li>
         <li class="site-header__nav-item">
-          <a href="perfil.html" class="site-header__nav-link" data-nav="profile">Perfil</a>
+          <a href="perfil.html" class="site-header__nav-link site-header__nav-link--active" data-nav="profile">Perfil</a>
         </li>
         <li class="site-header__nav-item">
-          <a href="login.html" class="site-header__nav-link" data-nav="auth">Login</a>
+          <a href="login.html" class="site-header__nav-link" data-nav="auth" id="loginLink">Login</a>
+          <button id="logoutBtn" class="site-header__nav-link" style="display:none;border:none;background:none;cursor:pointer">Logout</button>
         </li>
       </ul>
     </nav>
@@ -31,16 +32,49 @@
 
   <main class="outlet" data-outlet>
     <section class="user-profile" data-component="UserProfile">
+
       <div class="user-profile__header">
-        <img src="https://via.placeholder.com/150" alt="Avatar del usuario" class="user-profile__avatar">
+        <img src="https://via.placeholder.com/150"
+             alt="Avatar del usuario"
+             class="user-profile__avatar"
+             id="profileAvatarImg">
+
         <div class="user-profile__info">
           <h2 class="user-profile__name">Usuario</h2>
           <p class="user-profile__email">email@ejemplo.com</p>
           <p class="user-profile__join-date">Miembro desde: —</p>
         </div>
-        <button class="user-profile__edit-button">Editar Perfil</button>
+
+        <div class="user-profile__actions">
+          <button class="user-profile__edit-button" id="editProfileBtn">Editar Perfil</button>
+
+          <!-- NUEVO: botón borrar cuenta -->
+          <button id="deleteAccountBtn"
+                  class="habit-card__button habit-card__button--delete"
+                  style="margin-left:.5rem">
+            Eliminar cuenta
+          </button>
+        </div>
       </div>
-      
+
+      <!-- (Opcional) Mini-form de edición inline (oculto hasta pulsar “Editar Perfil”) -->
+      <form id="profileEditForm" style="display:none; margin:1rem 0;">
+        <div class="auth-form__field">
+          <label class="auth-form__label" for="profileName">Nombre:</label>
+          <input class="auth-form__input" type="text" id="profileName" placeholder="Tu nombre"/>
+        </div>
+
+        <div class="auth-form__field">
+          <label class="auth-form__label" for="profileAvatar">Foto de perfil:</label>
+          <input class="auth-form__input" type="file" id="profileAvatar" accept="image/*"/>
+        </div>
+
+        <div style="margin-top:.5rem">
+          <button type="submit" class="user-profile__edit-button">Guardar</button>
+          <button type="button" id="cancelEditProfile" class="habit-card__button" style="margin-left:.5rem">Cancelar</button>
+        </div>
+      </form>
+
       <div class="user-profile__stats">
         <div class="user-profile__stat-item">
           <h3 class="user-profile__stat-value">12</h3>
@@ -84,6 +118,7 @@
           </div>
         </div>
       </div>
+
     </section>
   </main>
 

@@ -14,7 +14,7 @@
     <nav class="site-header__nav" data-component="SiteNav">
       <ul class="site-header__nav-list">
         <li class="site-header__nav-item">
-          <a href="index.html" class="site-header__nav-link" data-nav="dashboard">Dashboard</a>
+          <a href="index.html" class="site-header__nav-link site-header__nav-link--active" data-nav="dashboard">Dashboard</a>
         </li>
         <li class="site-header__nav-item">
           <a href="habitos.html" class="site-header__nav-link" data-nav="habits">Hábitos</a>
@@ -23,7 +23,13 @@
           <a href="perfil.html" class="site-header__nav-link" data-nav="profile">Perfil</a>
         </li>
         <li class="site-header__nav-item">
-          <a href="login.html" class="site-header__nav-link" data-nav="auth">Login</a>
+          <!-- Igual que en perfil.html: Login/Logout dinámicos gestionados por script.js -->
+          <a href="login.html" class="site-header__nav-link" data-nav="auth" id="loginLink">Login</a>
+          <button id="logoutBtn"
+                  class="site-header__nav-link"
+                  style="display:none;border:none;background:none;cursor:pointer">
+            Logout
+          </button>
         </li>
       </ul>
     </nav>
