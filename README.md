@@ -58,7 +58,7 @@ Hecho
 
 Login / Registro (auth) ✔️
 
-Crear / Listar / Editar / Eliminar hábitos ✔️
+Crear / Listar / Eliminar hábitos ✔️
 
 Toggle completado ✔️
 
@@ -67,6 +67,8 @@ Mostrar usuario en Perfil e Inicio ✔️
 Enlace de edición con ?id= corregido ✔️
 
 Falta
+
+Editar habitos
 
 Logout visible (botón que limpie auth y redirija).
 
