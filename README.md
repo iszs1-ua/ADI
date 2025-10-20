@@ -56,21 +56,21 @@ Qué tienes hecho vs. qué falta
 
 Hecho
 
-Login / Registro (auth) ✔️
+- Login / Registro (auth) ✔️
 
-Crear / Listar / Eliminar hábitos ✔️
+- Crear / Listar / Eliminar hábitos ✔️
 
-Toggle completado ✔️
+- Toggle completado ✔️
 
-Mostrar usuario en Perfil e Inicio ✔️
+- Mostrar usuario en Perfil e Inicio ✔️
 
-Enlace de edición con ?id= corregido ✔️
+- Enlace de edición con ?id= corregido ✔️
 
-Logout visible (botón que limpie auth y redirija) ✔️
+- Logout visible (botón que limpie auth y redirija) ✔️
 
-Update de usuario (ej. cambiar username en Perfil) ✔
+- Update de usuario (ej. cambiar username en Perfil) ✔
 
-Delete de usuario (opcional si queréis cierre redondo del CRUD) ✔
+- Delete de usuario (opcional si queréis cierre redondo del CRUD) ✔
 
 Falta
 
