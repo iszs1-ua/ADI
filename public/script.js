@@ -119,47 +119,80 @@ onPage(['registro'], () => {
 //  - Colección: "habitos" -> nombre, descripcion, completado, frecuencia, usuario (relation a users)
 // ------------------------
 onPage(['habitos'], () => {
-  (async () => {
-    try {
-      if (!pb.authStore.isValid) return location.href = 'login.html';
+    
+    // Función central para cargar los hábitos con filtros (Usa PB directamente)
+    const loadHabits = (searchText = '', frequency = '') => {
+        if (!pb.authStore.isValid) { // Uso directo de PB
+            return location.href = 'login.html';
+        }
 
-      const grid = $('.habit-list__grid');
-      if (!grid) return;
+        const grid = $('.habit-list__grid');
+        if (!grid) return;
 
-      const userId = pb.authStore.model?.id;
-      const res = await pb.collection('habitos').getList(1, 50, {
-        sort: '-created',
-        filter: `usuario="${userId}"`
-      });
+        const userId = pb.authStore.model?.id; // Uso directo de PB
+        let filterString = `usuario="${userId}"`; // Filtro inicial por usuario
+        
+        // Lógica de Búsqueda por Texto
+        if (searchText) {
+            const textFilter = `(nombre ~ "${searchText}" || descripcion ~ "${searchText}")`;
+            filterString += ` && ${textFilter}`;
+        }
 
-      grid.innerHTML = '';
-      grid.insertAdjacentHTML('beforeend',
-        `<a href="new-habit.html" class="habit-list__add-button" data-nav="new-habit">+ Nuevo Hábito</a>`);
+        // Lógica de Filtro por Frecuencia
+        if (frequency) {
+            filterString += ` && frecuencia="${frequency}"`;
+        }
 
-      for (const h of res.items) {
-        const freq = h.frecuencia || '—';
-        grid.insertAdjacentHTML('afterbegin', `
-          <div class="habit-card" data-id="${h.id}">
-            <div class="habit-card__header">
-              <h3 class="habit-card__title">${h.nombre}</h3>
-              <div>
-                <span class="habit-card__badge habit-card__badge--status">${h.completado ? 'Hecho' : 'Pendiente'}</span>
-                <span class="habit-card__badge habit-card__badge--freq">${freq}</span>
-              </div>
-            </div>
-            <p class="habit-card__description">${h.descripcion || ''}</p>
-            <div class="habit-card__progress"><span class="habit-card__progress-text">—</span></div>
-            <button class="habit-card__button" data-action="toggle">
-              ${h.completado ? 'Marcar pendiente' : 'Marcar completado'}
-            </button>
-            <a href="edit-habit.html?id=${h.id}" class="habit-card__button habit-card__button--edit">Editar</a>
-            <button class="habit-card__button habit-card__button--delete" data-action="delete">Eliminar</button>
-          </div>
-        `);
-      }
+        // Obtener la lista usando Promesas
+        pb.collection('habitos').getList(1, 50, {
+            sort: '-created',
+            filter: filterString // Aplica el filtro combinado
+        })
+        .then(res => {
+            // Lógica de Renderizado
+            grid.innerHTML = '';
+            grid.insertAdjacentHTML('beforeend',
+                `<a href="new-habit.html" class="habit-list__add-button" data-nav="new-habit">+ Nuevo Hábito</a>`);
 
-      // Acciones
-      grid.addEventListener('click', async (ev) => {
+            for (const h of res.items) {
+                const freq = h.frecuencia || '—';
+                grid.insertAdjacentHTML('afterbegin', `
+                    <div class="habit-card" data-id="${h.id}">
+                        <div class="habit-card__header">
+                            <h3 class="habit-card__title">${h.nombre}</h3>
+                            <div>
+                                <span class="habit-card__badge habit-card__badge--status">${h.completado ? 'Hecho' : 'Pendiente'}</span>
+                                <span class="habit-card__badge habit-card__badge--freq">${freq}</span>
+                            </div>
+                        </div>
+                        <p class="habit-card__description">${h.descripcion || ''}</p>
+                        <div class="habit-card__progress"><span class="habit-card__progress-text">—</span></div>
+                        <button class="habit-card__button" data-action="toggle">
+                            ${h.completado ? 'Marcar pendiente' : 'Marcar completado'}
+                        </button>
+                        <a href="edit-habit.html?id=${h.id}" class="habit-card__button habit-card__button--edit">Editar</a>
+                        <button class="habit-card__button habit-card__button--delete" data-action="delete">Eliminar</button>
+                    </div>
+                `);
+            }
+        })
+        .catch(err => {
+            alert(err?.message || 'No se pudo cargar la lista');
+        });
+    };
+
+    // 1. Carga inicial de la lista
+    loadHabits();
+
+    // 2. Listener para la búsqueda y el filtro
+    $('#applyFiltersBtn')?.addEventListener('click', () => {
+        const searchText = $('#searchText').value.trim();
+        const frequency = $('#frequencyFilter').value;
+        loadHabits(searchText, frequency);
+    });
+
+    // 3. Acciones (Toggle y Delete) - Usando .then() para Promesas
+    $('.habit-list__grid')?.addEventListener('click', (ev) => {
         const btn = ev.target.closest('[data-action]');
         if (!btn) return;
         const card = ev.target.closest('.habit-card');
@@ -167,26 +200,34 @@ onPage(['habitos'], () => {
         if (!id) return;
 
         if (btn.dataset.action === 'delete') {
-          if (!confirm('¿Eliminar este hábito?')) return;
-          try { await pb.collection('habitos').delete(id); card.remove(); }
-          catch (err) { alert(err?.message || 'No se pudo eliminar'); }
+            if (!confirm('¿Eliminar este hábito?')) return;
+            
+            pb.collection('habitos').delete(id) // Uso directo de PB
+                .then(() => {
+                    card.remove(); 
+                })
+                .catch(err => {
+                    alert(err?.message || 'No se pudo eliminar');
+                });
         }
 
         if (btn.dataset.action === 'toggle') {
-          try {
-            const h = await pb.collection('habitos').getOne(id);
-            const upd = await pb.collection('habitos').update(id, { completado: !h.completado });
-            card.querySelector('.habit-card__badge--status').textContent = upd.completado ? 'Hecho' : 'Pendiente';
-            btn.textContent = upd.completado ? 'Marcar pendiente' : 'Marcar completado';
-          } catch (err) {
-            alert(err?.message || 'No se pudo actualizar');
-          }
+            // Se usa .then() para Promesas
+            pb.collection('habitos').getOne(id)
+                .then(h => {
+                    const nuevoEstado = !h.completado;
+                    return pb.collection('habitos').update(id, { completado: nuevoEstado });
+                })
+                .then(upd => {
+                    // Lógica de actualización de la UI
+                    card.querySelector('.habit-card__badge--status').textContent = upd.completado ? 'Hecho' : 'Pendiente';
+                    btn.textContent = upd.completado ? 'Marcar pendiente' : 'Marcar completado';
+                })
+                .catch(err => {
+                    alert(err?.message || 'No se pudo actualizar');
+                });
         }
-      });
-    } catch (err) {
-      alert(err?.message || 'No se pudo cargar la lista');
-    }
-  })();
+    });
 });
 
 // ------------------------
