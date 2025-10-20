@@ -38,6 +38,18 @@
   <main class="outlet" data-outlet>
     <section class="habit-list" data-component="HabitList">
       <h2 class="habit-list__heading">Mis Hábitos</h2>
+      <div class="habit-list__filters" style="margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+        <input type="text" id="searchText" placeholder="Buscar por nombre o descripción..." style="padding: 0.75rem; border-radius: 8px; border: 1px solid #ddd; flex-grow: 1; max-width: 350px;">
+        
+        <select id="frequencyFilter" style="padding: 0.75rem; border-radius: 8px; border: 1px solid #ddd;">
+            <option value="">Todas las Frecuencias</option>
+            <option value="daily">Diario</option>
+            <option value="weekly">Semanal</option>
+            <option value="3-times-a-week">3 veces por semana</option>
+        </select>
+        
+        <button type="button" id="applyFiltersBtn" class="habit-form__button" style="width: auto; padding: 0.75rem 1.5rem; margin-top: 0; min-width: 100px;">Buscar / Filtrar</button>
+    </div>
 
       <div class="habit-list__grid">
         <!-- Tu script.js insertará aquí las tarjetas dinámicas desde PocketBase -->
