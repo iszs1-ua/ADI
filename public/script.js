@@ -17,11 +17,129 @@ const onPage = (names, fn) => {
   if (set.some(n => n === slug)) fn();
 };
 
+// ===================================================================
+// CAPA DE SERVICIOS
+// ===================================================================
+
+// alias por si tu BD usa etiquetas distintas
+const FREQ_ALIASES = {
+  daily: ['daily', 'diario'],
+  weekly: ['weekly', 'semanal'],
+  '3-times-a-week': [
+    '3-times-a-week',
+    '3xweek',
+    '3-per-week',
+    '3_per_week',
+    '3 veces por semana',
+    'tres-veces-semana',
+    'tres_veces_semana',
+  ],
+};
+const normalizeFreq = (f) => (f || '').trim();
+const freqToOr = (value) => {
+  const v = normalizeFreq(value);
+  const list = FREQ_ALIASES[v] || [v];
+  // genera (frecuencia='a' || frecuencia='b' ...)
+  return '(' + list.map(x => `frecuencia='${x.replace(/'/g, "\\'")}'`).join(' || ') + ')';
+};
+
+const AuthService = {
+  isLogged: () => pb.authStore.isValid,
+  currentUser: () => pb.authStore.model,
+  async login(email, password) {
+    return pb.collection('users').authWithPassword(email, password);
+  },
+  async register({ username, email, password, passwordConfirm }) {
+    await pb.collection('users').create({ username, email, password, passwordConfirm });
+    return this.login(email, password);
+  },
+  logout() {
+    pb.authStore.clear();
+  }
+};
+
+const HabitosService = {
+  async create({ nombre, descripcion, frecuencia }) {
+    const userId = AuthService.currentUser()?.id;
+    return pb.collection('habitos').create({
+      nombre,
+      descripcion,
+      frecuencia,
+      completado: false,
+      usuario: userId,
+    });
+  },
+
+  async listMine({ page = 1, perPage = 50 } = {}) {
+    const userId = AuthService.currentUser()?.id;
+    const filter = `(usuario='${userId}' || usuario.id ?= '${userId}')`;
+    return pb.collection('habitos').getList(page, perPage, {
+      sort: '-created',
+      filter,
+    });
+  },
+
+  // búsqueda por texto y opcionalmente por frecuencia
+  async searchMine({ q = '', frecuencia, page = 1, perPage = 50 } = {}) {
+    const userId = AuthService.currentUser()?.id;
+    const parts = [`(usuario='${userId}' || usuario.id ?= '${userId}')`];
+
+    if (q) {
+      const safe = q.replace(/'/g, "\\'");
+      parts.push(`(nombre ~ '${safe}' || descripcion ~ '${safe}')`);
+    }
+    if (frecuencia) {
+      parts.push(freqToOr(frecuencia));
+    }
+
+    const filter = parts.join(' && ');
+    return pb.collection('habitos').getList(page, perPage, {
+      sort: '-created',
+      filter,
+    });
+  },
+
+  // **nuevo**: filtrar SOLO por frecuencia (sin texto)
+  async filterByFrequency({ frecuencia, page = 1, perPage = 50 } = {}) {
+    const userId = AuthService.currentUser()?.id;
+    if (!frecuencia) return this.listMine({ page, perPage });
+
+    const filter = [
+      `(usuario='${userId}' || usuario.id ?= '${userId}')`,
+      freqToOr(frecuencia),
+    ].join(' && ');
+
+    return pb.collection('habitos').getList(page, perPage, {
+      sort: '-created',
+      filter,
+    });
+  },
+
+  get: (id) => pb.collection('habitos').getOne(id),
+  update: (id, data) => pb.collection('habitos').update(id, data),
+  remove: (id) => pb.collection('habitos').delete(id),
+};
+
+const UsersService = {
+  async updateMe(dataOrFormData) {
+    const u = AuthService.currentUser();
+    return pb.collection('users').update(u.id, dataOrFormData);
+  },
+  async deleteMe() {
+    const u = AuthService.currentUser();
+    return pb.collection('users').delete(u.id);
+  },
+  avatarUrl(user) {
+    if (!user?.avatar) return '';
+    return pb.files.getUrl(user, user.avatar);
+  }
+};
+
 // ------------------------
 // Páginas protegidas (requieren sesión)
 // ------------------------
 const PROTECTED = new Set(['index', 'habitos', 'perfil', 'new-habit', 'edit-habit']);
-if (PROTECTED.has(slug) && !pb.authStore.isValid) {
+if (PROTECTED.has(slug) && !AuthService.isLogged()) {
   if (slug !== 'login' && slug !== 'registro') {
     location.href = 'login.html';
   }
@@ -40,7 +158,7 @@ if (PROTECTED.has(slug) && !pb.authStore.isValid) {
 })();
 
 function updateAuthLinks() {
-  const isLogged = pb.authStore.isValid;
+  const isLogged = AuthService.isLogged();
   const loginLink = $('#loginLink');
   const logoutBtn = $('#logoutBtn');
   if (loginLink) loginLink.style.display = isLogged ? 'none' : '';
@@ -50,7 +168,7 @@ updateAuthLinks();
 pb.authStore.onChange(updateAuthLinks);
 
 $('#logoutBtn')?.addEventListener('click', () => {
-  pb.authStore.clear();
+  AuthService.logout();
   updateAuthLinks();
   location.href = 'login.html';
 });
@@ -84,7 +202,7 @@ onPage(['login'], () => {
     try {
       const email = $('#email').value.trim();
       const password = $('#password').value;
-      await pb.collection('users').authWithPassword(email, password);
+      await AuthService.login(email, password);
       location.href = 'index.html';
     } catch (err) {
       alert(err?.message || 'Login fallido');
@@ -105,268 +223,222 @@ onPage(['registro'], () => {
       const confirm = $('#confirm-password').value;
       if (password !== confirm) return alert('Las contraseñas no coinciden');
 
-      await pb.collection('users').create({ username, email, password, passwordConfirm: confirm });
-      await pb.collection('users').authWithPassword(email, password);
+      await AuthService.register({ username, email, password, passwordConfirm: confirm });
       location.href = 'index.html';
     } catch (err) {
-      alert(err?.message || 'Failed to create record.');
+      alert(err?.message || 'No se pudo registrar.');
     }
   });
 });
 
 // ------------------------
 // LISTADO HÁBITOS (habitos)
-//  - Colección: "habitos" -> nombre, descripcion, completado, frecuencia, usuario (relation a users)
 // ------------------------
 onPage(['habitos'], () => {
-    
-    // Función central para cargar los hábitos con filtros (Usa PB directamente)
-    const loadHabits = (searchText = '', frequency = '') => {
-        if (!pb.authStore.isValid) { // Uso directo de PB
-            return location.href = 'login.html';
-        }
+  const grid = $('.habit-list__grid');
 
-        const grid = $('.habit-list__grid');
-        if (!grid) return;
-
-        const userId = pb.authStore.model?.id; // Uso directo de PB
-        let filterString = `usuario="${userId}"`; // Filtro inicial por usuario
-        
-        // Lógica de Búsqueda por Texto
-        if (searchText) {
-            const textFilter = `(nombre ~ "${searchText}" || descripcion ~ "${searchText}")`;
-            filterString += ` && ${textFilter}`;
-        }
-
-        // Lógica de Filtro por Frecuencia
-        if (frequency) {
-            filterString += ` && frecuencia="${frequency}"`;
-        }
-
-        // Obtener la lista usando Promesas
-        pb.collection('habitos').getList(1, 50, {
-            sort: '-created',
-            filter: filterString // Aplica el filtro combinado
-        })
-        .then(res => {
-            // Lógica de Renderizado
-            grid.innerHTML = '';
-            grid.insertAdjacentHTML('beforeend',
-                `<a href="new-habit.html" class="habit-list__add-button" data-nav="new-habit">+ Nuevo Hábito</a>`);
-
-            for (const h of res.items) {
-                const freq = h.frecuencia || '—';
-                grid.insertAdjacentHTML('afterbegin', `
-                    <div class="habit-card" data-id="${h.id}">
-                        <div class="habit-card__header">
-                            <h3 class="habit-card__title">${h.nombre}</h3>
-                            <div>
-                                <span class="habit-card__badge habit-card__badge--status">${h.completado ? 'Hecho' : 'Pendiente'}</span>
-                                <span class="habit-card__badge habit-card__badge--freq">${freq}</span>
-                            </div>
-                        </div>
-                        <p class="habit-card__description">${h.descripcion || ''}</p>
-                        <div class="habit-card__progress"><span class="habit-card__progress-text">—</span></div>
-                        <button class="habit-card__button" data-action="toggle">
-                            ${h.completado ? 'Marcar pendiente' : 'Marcar completado'}
-                        </button>
-                        <a href="edit-habit.html?id=${h.id}" class="habit-card__button habit-card__button--edit">Editar</a>
-                        <button class="habit-card__button habit-card__button--delete" data-action="delete">Eliminar</button>
-                    </div>
-                `);
-            }
-        })
-        .catch(err => {
-            alert(err?.message || 'No se pudo cargar la lista');
-        });
-    };
-
-    // 1. Carga inicial de la lista
-    loadHabits();
-
-    // 2. Listener para la búsqueda y el filtro
-    $('#applyFiltersBtn')?.addEventListener('click', () => {
-        const searchText = $('#searchText').value.trim();
-        const frequency = $('#frequencyFilter').value;
-        loadHabits(searchText, frequency);
-    });
-
-    // 3. Acciones (Toggle y Delete) - Usando .then() para Promesas
-    $('.habit-list__grid')?.addEventListener('click', (ev) => {
-        const btn = ev.target.closest('[data-action]');
-        if (!btn) return;
-        const card = ev.target.closest('.habit-card');
-        const id = card?.dataset.id;
-        if (!id) return;
-
-        if (btn.dataset.action === 'delete') {
-            if (!confirm('¿Eliminar este hábito?')) return;
-            
-            pb.collection('habitos').delete(id) // Uso directo de PB
-                .then(() => {
-                    card.remove(); 
-                })
-                .catch(err => {
-                    alert(err?.message || 'No se pudo eliminar');
-                });
-        }
-
-        if (btn.dataset.action === 'toggle') {
-            // Se usa .then() para Promesas
-            pb.collection('habitos').getOne(id)
-                .then(h => {
-                    const nuevoEstado = !h.completado;
-                    return pb.collection('habitos').update(id, { completado: nuevoEstado });
-                })
-                .then(upd => {
-                    // Lógica de actualización de la UI
-                    card.querySelector('.habit-card__badge--status').textContent = upd.completado ? 'Hecho' : 'Pendiente';
-                    btn.textContent = upd.completado ? 'Marcar pendiente' : 'Marcar completado';
-                })
-                .catch(err => {
-                    alert(err?.message || 'No se pudo actualizar');
-                });
-        }
-    });
-});
-
-// ------------------------
-// NUEVO HÁBITO (new-habit)
-// ------------------------
-onPage(['new-habit'], () => {
-  $('.habit-form__container')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      if (!pb.authStore.isValid) return location.href = 'login.html';
-
-      const nombre = $('#habit-name').value.trim();
-      const descripcion = $('#habit-description').value.trim();
-      const frecuencia = $('#habit-frequency')?.value || 'daily';
-      const userId = pb.authStore.model?.id;
-
-      await pb.collection('habitos').create({
-        nombre,
-        descripcion,
-        frecuencia,
-        completado: false,
-        usuario: userId
-      });
-
-      location.href = 'habitos.html';
-    } catch (err) {
-      alert(err?.message || 'No se pudo crear');
+  const render = (items) => {
+    grid.innerHTML = '';
+    grid.insertAdjacentHTML('beforeend',
+      `<a href="new-habit.html" class="habit-list__add-button" data-nav="new-habit">+ Nuevo Hábito</a>`);
+    for (const h of items) {
+      const freq = h.frecuencia || '—';
+      grid.insertAdjacentHTML('afterbegin', `
+        <div class="habit-card" data-id="${h.id}">
+          <div class="habit-card__header">
+            <h3 class="habit-card__title">${h.nombre}</h3>
+            <div>
+              <span class="habit-card__badge habit-card__badge--status">${h.completado ? 'Hecho' : 'Pendiente'}</span>
+              <span class="habit-card__badge habit-card__badge--freq">${freq}</span>
+            </div>
+          </div>
+          <p class="habit-card__description">${h.descripcion || ''}</p>
+          <div class="habit-card__progress"><span class="habit-card__progress-text">—</span></div>
+          <button class="habit-card__button" data-action="toggle">
+            ${h.completado ? 'Marcar pendiente' : 'Marcar completado'}
+          </button>
+          <a href="edit-habit.html?id=${h.id}" class="habit-card__button habit-card__button--edit">Editar</a>
+          <button class="habit-card__button habit-card__button--delete" data-action="delete">Eliminar</button>
+        </div>
+      `);
     }
+  };
+
+  const load = async () => {
+    if (!AuthService.isLogged()) return location.href = 'login.html';
+    const res = await HabitosService.listMine();
+    render(res.items);
+  };
+
+  load();
+
+  // Botón Buscar / Filtrar
+  $('#applyFiltersBtn')?.addEventListener('click', async () => {
+    const q = $('#searchText')?.value.trim() || '';
+    const frecuencia = $('#frequencyFilter')?.value || '';
+
+    let res;
+    if (q && frecuencia) {
+      res = await HabitosService.searchMine({ q, frecuencia });
+    } else if (frecuencia && !q) {
+      res = await HabitosService.filterByFrequency({ frecuencia });
+    } else if (q && !frecuencia) {
+      res = await HabitosService.searchMine({ q });
+    } else {
+      res = await HabitosService.listMine();
+    }
+    render(res.items);
   });
-});
 
-// ------------------------
-// EDITAR HÁBITO (edit-habit)
-// ------------------------
-onPage(['edit-habit'], () => {
-  const id = new URLSearchParams(location.search).get('id');
-  if (!id) {
-    alert('Falta el id del hábito');
-    location.href = 'habitos.html';
-    return;
-  }
+  // (Opcional) filtrar al cambiar el select sin pulsar botón
+  $('#frequencyFilter')?.addEventListener('change', async (e) => {
+    const frecuencia = e.target.value || '';
+    const res = await HabitosService.filterByFrequency({ frecuencia });
+    render(res.items);
+  });
 
-  (async () => {
-    try {
-      if (!pb.authStore.isValid) return location.href = 'login.html';
-      const h = await pb.collection('habitos').getOne(id);
-      $('#habit-name').value = h.nombre || '';
-      $('#habit-description').value = h.descripcion || '';
-      $('#habit-frequency').value = h.frecuencia || 'daily';
-    } catch (err) {
-      alert(err?.message || 'No se pudo cargar el hábito');
+  // Acciones
+  grid?.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('[data-action]');
+    if (!btn) return;
+    const card = ev.target.closest('.habit-card');
+    const id = card?.dataset.id;
+    if (!id) return;
+
+    if (btn.dataset.action === 'delete') {
+      if (!confirm('¿Eliminar este hábito?')) return;
+      try { await HabitosService.remove(id); card.remove(); }
+      catch (err) { alert(err?.message || 'No se pudo eliminar'); }
     }
-  })();
 
-  $('.habit-form__container')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const nombre = $('#habit-name').value.trim();
-      const descripcion = $('#habit-description').value.trim();
-      const frecuencia = $('#habit-frequency').value;
-      await pb.collection('habitos').update(id, { nombre, descripcion, frecuencia });
-      location.href = 'habitos.html';
-    } catch (err) {
-      alert(err?.message || 'No se pudo guardar');
+    if (btn.dataset.action === 'toggle') {
+      try {
+        const h = await HabitosService.get(id);
+        const upd = await HabitosService.update(id, { completado: !h.completado });
+        card.querySelector('.habit-card__badge--status').textContent = upd.completado ? 'Hecho' : 'Pendiente';
+        btn.textContent = upd.completado ? 'Marcar pendiente' : 'Marcar completado';
+      } catch (err) {
+        alert(err?.message || 'No se pudo actualizar');
+      }
     }
   });
 });
 
 // ------------------------
 // PERFIL e INICIO (perfil / index)
-//   - Rellena datos
-//   - Eliminar cuenta
-//   - Editar nombre + avatar (inline)
 // ------------------------
 onPage(['perfil', 'index'], () => {
-    (async () => {
-        // 1. Verificar Autenticación
-        if (!pb.authStore.isValid) {
-            if (slug === 'perfil' || slug === 'index') location.href = 'login.html';
-            return;
+  (async () => {
+    if (!AuthService.isLogged()) {
+      if (slug === 'perfil') location.href = 'login.html';
+      return;
+    }
+
+    const u = AuthService.currentUser();
+
+    const nameEl   = $('.user-profile__name');
+    const emailEl  = $('.user-profile__email');
+    const sinceEl  = $('.user-profile__join-date');
+    const avatarImg = $('#profileAvatarImg');
+
+    if (nameEl)  nameEl.textContent  = u?.name || u?.username || 'Usuario';
+    if (emailEl) emailEl.textContent = u?.email || '';
+    if (sinceEl && u?.created) {
+      const d = new Date(u.created);
+      sinceEl.textContent = 'Miembro desde: ' + d.toLocaleDateString();
+    }
+    if (avatarImg && u?.avatar) avatarImg.src = UsersService.avatarUrl(u);
+
+    if (slug === 'perfil') {
+      $('#deleteAccountBtn')?.addEventListener('click', async () => {
+        if (!confirm('¿Seguro que quieres eliminar tu cuenta? Esta acción es irreversible.')) return;
+        try {
+          await UsersService.deleteMe();
+          AuthService.logout();
+          alert('Cuenta eliminada. ¡Hasta pronto!');
+          location.href = 'registro.html';
+        } catch (err) {
+          console.error(err);
+          alert(err?.message || 'No se pudo eliminar la cuenta');
+        }
+      });
+
+      const editBtn     = $('#editProfileBtn');
+      const editForm    = $('#profileEditForm');
+      const cancelBtn   = $('#cancelEditProfile');
+      const inputName   = $('#profileName');
+      const inputAvatar = $('#profileAvatar');
+
+      editBtn?.addEventListener('click', () => {
+        if (!editForm) return;
+        if (inputName) inputName.value = u?.name || u?.username || '';
+        editForm.style.display = 'block';
+      });
+
+      cancelBtn?.addEventListener('click', () => {
+        if (editForm) editForm.style.display = 'none';
+      });
+
+      editForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const fd = new FormData();
+          if (inputName) fd.append('name', (inputName.value || '').trim());
+          const file = inputAvatar?.files?.[0];
+          if (file) fd.append('avatar', file);
+
+          const updated = await UsersService.updateMe(fd);
+          pb.authStore.save(pb.authStore.token, updated);
+
+          if (nameEl) nameEl.textContent = updated.name || updated.username || 'Usuario';
+          if (avatarImg && updated.avatar) avatarImg.src = UsersService.avatarUrl(updated);
+
+          alert('Perfil actualizado ✅');
+          editForm.style.display = 'none';
+        } catch (err) {
+          console.error(err);
+          alert(err?.message || 'No se pudo actualizar el perfil');
+        }
+      });
+    }
+
+    // --- LÓGICA DEL DASHBOARD (INDEX) ---
+    if (slug === 'index') {
+      const weeklyCalendar = $('[data-calendar="weekly"]');
+      const dashboardSummary = $('.dashboard__summary p');
+
+      try {
+        const res = await HabitosService.listMine();
+        const habits = res.items;
+
+        let headerRow = weeklyCalendar?.querySelector('.calendar__row--header');
+        weeklyCalendar.innerHTML = '';
+        if (headerRow) weeklyCalendar.appendChild(headerRow);
+
+        if (!habits.length) {
+          weeklyCalendar.innerHTML += '<p style="padding: 1rem;">No tienes hábitos. Crea uno nuevo para empezar.</p>';
+        } else {
+          habits.forEach(habit => {
+            weeklyCalendar.innerHTML += createWeeklyHabitRow(habit);
+          });
         }
 
-        const u = pb.authStore.model;
-        
-        // --- Selectores del Dashboard ---
-        const weeklyCalendar = $('[data-calendar="weekly"]');
-        const dashboardSummary = $('.dashboard__summary p');
+        const totalHabits = habits.length;
+        const completedToday = habits.filter(h => h.completado).length;
 
-        // --- Lógica de PERFIL --- (se mantiene simplificada aquí)
-        if (slug === 'perfil') {
-            // Rellenar datos visibles...
-            // ... (Toda la lógica de Perfil, eliminar cuenta, editar, etc. va aquí)
+        if (dashboardSummary) {
+          dashboardSummary.textContent =
+            `¡Hola, ${u?.username || 'Usuario'}! Tienes ${totalHabits} hábitos. ` +
+            `Hoy has completado ${completedToday} de ${totalHabits} hábitos.`;
         }
 
-        // --- LÓGICA DEL DASHBOARD (INDEX) ---
-        if (slug === 'index') {
-            try {
-                // 2. OBTENER HÁBITOS (Uso directo de PB)
-                const userId = u.id;
-                const res = await pb.collection('habitos').getList(1, 50, {
-                    sort: '-created',
-                    filter: `usuario="${userId}"`
-                });
-                const habits = res.items;
-
-                // 3. Manejo del contenedor y encabezado
-                const headerRow = weeklyCalendar?.querySelector('.calendar__row--header');
-                
-                // Limpiar contenido y mantener el encabezado (si existe)
-                weeklyCalendar.innerHTML = ''; 
-                if (headerRow) weeklyCalendar.appendChild(headerRow);
-                
-                if (habits.length === 0) {
-                    weeklyCalendar.innerHTML += '<p style="padding: 1rem;">No tienes hábitos. Crea uno nuevo para empezar.</p>';
-                } else {
-                    // 4. Inyectar los hábitos dinámicos
-                    habits.forEach(habit => {
-                        weeklyCalendar.innerHTML += createWeeklyHabitRow(habit);
-                    });
-                }
-                
-                // 5. Actualizar estadísticas del resumen
-                const totalHabits = habits.length;
-                const completedToday = habits.filter(h => h.completado).length; 
-
-                if (dashboardSummary) {
-                    // Actualiza las estadísticas con datos REALES de la BD
-                    dashboardSummary.textContent = `¡Hola, ${u?.username || 'Usuario'}! Tienes ${totalHabits} hábitos. Hoy has completado ${completedToday} de ${totalHabits} hábitos.`;
-                }
-
-                // 6. Activar la lógica de cambio de vistas
-                setupDashboardViews();
-
-            } catch (error) {
-                console.error('Error al cargar el Dashboard:', error);
-                if (weeklyCalendar) weeklyCalendar.innerHTML = '<p class="error-message">Error al cargar el Dashboard.</p>';
-            }
-        }
-    })();
+        setupDashboardViews();
+      } catch (error) {
+        console.error('Error al cargar el Dashboard:', error);
+        if (weeklyCalendar) weeklyCalendar.innerHTML = '<p class="error-message">Error al cargar el Dashboard.</p>';
+      }
+    }
+  })();
 });
 
 // ------------------------
@@ -377,67 +449,49 @@ document.addEventListener('click', (e) => {
   if (!a) return;
   const href = (a.getAttribute('href') || '').toLowerCase().replace(/\.html$/, '');
   const targetSlug = href.split('/').pop() || 'index';
-  if (PROTECTED.has(targetSlug) && !pb.authStore.isValid) {
+  if (PROTECTED.has(targetSlug) && !AuthService.isLogged()) {
     e.preventDefault();
     location.href = 'login.html';
   }
 });
 
 // ------------------------
-// FUNCIÓN PARA RENDERIZAR HÁBITOS (Vista semanal dinámica) // FUNCIÓN AUXILIAR
+// FUNCIÓN PARA RENDERIZAR HÁBITOS (Vista semanal)
 // ------------------------
 const createWeeklyHabitRow = (habit) => {
-    // Simulación de estados para la semana (✓/✗)
-    const days = ['✓', '✗', '✓', '✓', '✗', '✓', '✗']; // Ejemplo: Lunes a Domingo
-    
-    const cells = days.map(status => {
-        const check = status === '✓' ? 'calendar__day-cell--completed' : 'calendar__day-cell--missed'; 
-        return `<div class="calendar__day-cell ${check}"><span class="calendar__tick">${status}</span></div>`;
-    }).join('');
-
-    return `
-        <div class="calendar__row calendar__row--habit">
-            <div class="calendar__habit-title">${habit.nombre}</div>
-            ${cells}
-        </div>
-    `;
+  const days = ['✓', '✗', '✓', '✓', '✗', '✓', '✗'];
+  const cells = days.map(status => {
+    const cls = status === '✓' ? 'calendar__day-cell--completed' : 'calendar__day-cell--missed';
+    return `<div class="calendar__day-cell ${cls}"><span class="calendar__tick">${status}</span></div>`;
+  }).join('');
+  return `
+    <div class="calendar__row calendar__row--habit">
+      <div class="calendar__habit-title">${habit.nombre}</div>
+      ${cells}
+    </div>
+  `;
 };
 
 // ------------------------
-// LÓGICA DE VISTAS DEL DASHBOARD (Función auxiliar) // FUNCIÓN AUXILIAR
+// LÓGICA DE VISTAS DEL DASHBOARD (auxiliar)
 // ------------------------
 const setupDashboardViews = () => {
-    const viewButtons = $$('.dashboard__view-button'); 
-    const calendarContainers = $$('[data-calendar]');
+  const viewButtons = $$('.dashboard__view-button'); 
+  const calendarContainers = $$('[data-calendar]');
+  if (!viewButtons.length || !calendarContainers.length) return;
 
-    if (viewButtons.length === 0 || calendarContainers.length === 0) return;
-
-    const switchView = (viewName) => {
-        calendarContainers.forEach(container => {
-            container.style.display = 'none';
-        });
-
-        const selectedCalendar = $(`[data-calendar="${viewName}"]`);
-        if (selectedCalendar) {
-            selectedCalendar.style.display = 'block';
-        }
-
-        viewButtons.forEach(button => {
-            if (button.getAttribute('data-view') === viewName) {
-                button.classList.add('dashboard__view-button--active');
-            } else {
-                button.classList.remove('dashboard__view-button--active');
-            }
-        });
-    };
-
+  const switchView = (viewName) => {
+    calendarContainers.forEach(container => container.style.display = 'none');
+    const selected = $(`[data-calendar="${viewName}"]`);
+    if (selected) selected.style.display = 'block';
     viewButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const viewName = button.getAttribute('data-view');
-            switchView(viewName);
-        });
+      button.classList.toggle('dashboard__view-button--active', button.getAttribute('data-view') === viewName);
     });
+  };
 
-    // Inicializar la vista por defecto (Semana)
-    switchView('weekly'); 
+  viewButtons.forEach(button => {
+    button.addEventListener('click', () => switchView(button.getAttribute('data-view')));
+  });
+
+  switchView('weekly');
 };

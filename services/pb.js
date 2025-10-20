@@ -1,10 +1,16 @@
-// services/pb.js
-import PocketBase from 'pocketbase';
-import 'dotenv/config';
+// public/services/pb.js
+// Usa el SDK UMD que cargas por CDN => window.PocketBase
+export const pb = new window.PocketBase('http://127.0.0.1:8090');
 
-const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090';
+export function currentUser() {
+  return pb?.authStore?.model ?? null;
+}
 
-export const pb = new PocketBase(PB_URL);
+export function isLogged() {
+  return !!pb?.authStore?.isValid;
+}
 
-// (Opcional) persistencia en Node entre ejecuciones: puedes serializar pb.authStore.
-// Para la práctica basta con mantener la instancia en este proceso.
+export function requireAuth() {
+  if (!isLogged()) throw new Error('No autenticado');
+  return currentUser();
+}
