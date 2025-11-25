@@ -155,3 +155,8 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173` (o el puerto
 - Verifica que la colección "habitos" exista en PocketBase con los campos correctos
 
 - **Framework Visual:** Se ha implementado **Vuetify** en la vista de Login (`LoginView.vue`) como demostración de uso de librerías de componentes UI, cumpliendo con el requisito adicional.
+
+- **Uso de Framework Visual (Vuetify):** Se ha instalado y configurado la librería Vuetify. Se ha implementado 
+  íntegramente en la vista de **Login** (`src/views/LoginView.vue`) para 
+  demostrar el uso de componentes UI (v-card, v-text-field, v-btn) y grid system, 
+  conviviendo con el CSS nativo del resto de la aplicación.
