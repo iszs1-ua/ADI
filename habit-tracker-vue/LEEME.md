@@ -160,3 +160,18 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173` (o el puerto
   íntegramente en la vista de **Login** (`src/views/LoginView.vue`) para 
   demostrar el uso de componentes UI (v-card, v-text-field, v-btn) y grid system, 
   conviviendo con el CSS nativo del resto de la aplicación.
+
+
+  ## Puntos Adicionales Implementados (Total estimado: +2.5 puntos)
+
+1. **Búsqueda y Paginación (+0.5):** - Implementado en la vista de listado (`HabitsView.vue`). Permite filtrar por texto, frecuencia y navegar por páginas.
+
+2. **Transiciones y Animaciones (+0.5):** - Uso de `<TransitionGroup>` para la entrada/salida de elementos en la lista.
+   - Efecto "Shake" (temblor) en los botones de formulario cuando hay errores de validación.
+   - Transiciones suaves en el modal de detalles.
+
+3. **Framework de Componentes Visuales - Vuetify (+1.0):** - Se ha integrado **Vuetify** en el proyecto.
+   - Se ha aplicado completamente en la vista `LoginView.vue` para demostrar el uso de sus componentes (`v-card`, `v-text-field`, grid system) coexistiendo con el CSS propio del proyecto.
+
+4. **Vue Router (+0.5):** - Gestión completa de navegación SPA.
+   - Implementación de **Guards** (`beforeEach`) para proteger rutas que requieren autenticación y redirigir usuarios invitados.
