@@ -1,11 +1,11 @@
-// public/services/habitos.js
+// src/services/habitos.js
 import { pb, requireAuth } from './pb.js';
 
 // Mapeo opcional por si los <option> del HTML no coinciden 1:1 con PB
 const FREQ_MAP = {
   daily: 'daily',
   weekly: 'weekly',
-  '3-times-a-week': '3-times-a-week', // ajusta si en PB se llama distinto
+  '3-times-a-week': '3-times-a-week',
   '3xweek': '3-times-a-week',
   '3_per_week': '3-times-a-week',
 };
@@ -19,13 +19,14 @@ export async function createHabit({ nombre, descripcion, frecuencia = 'daily' })
     descripcion,
     frecuencia,
     completado: false,
-    usuario: u.id,
+    user: u.id,   // <--- CORREGIDO: antes era 'usuario'
   });
 }
 
 export async function listMyHabits({ page = 1, perPage = 50, sort = '-created' } = {}) {
   const u = requireAuth();
-  const userFilter = `(usuario="${u.id}" || usuario.id ?= "${u.id}")`;
+  // CORREGIDO: cambiamos 'usuario' por 'user'
+  const userFilter = `(user="${u.id}" || user.id ?= "${u.id}")`;
   return pb.collection('habitos').getList(page, perPage, { sort, filter: userFilter });
 }
 
@@ -39,7 +40,8 @@ export async function searchMyHabits({
   const u = requireAuth();
 
   const parts = [
-    `(usuario="${u.id}" || usuario.id ?= "${u.id}")`,
+    // CORREGIDO: cambiamos 'usuario' por 'user'
+    `(user="${u.id}" || user.id ?= "${u.id}")`,
   ];
 
   if (q) {
@@ -49,7 +51,6 @@ export async function searchMyHabits({
 
   if (frecuencia) {
     const f = normalizeFrequency(frecuencia);
-    // cubre single (=) y multi (?=)
     parts.push(`(frecuencia="${f}" || frecuencia ?= "${f}")`);
   }
 
@@ -68,13 +69,13 @@ export async function filterMyHabitsByFrequency({
 } = {}) {
   const u = requireAuth();
 
-  // Si no hay frecuencia, devolvemos el listado normal
   if (!frecuencia) return listMyHabits({ page, perPage, sort });
 
   const f = normalizeFrequency(frecuencia);
 
   const parts = [
-    `(usuario="${u.id}" || usuario.id ?= "${u.id}")`,
+    // CORREGIDO: cambiamos 'usuario' por 'user'
+    `(user="${u.id}" || user.id ?= "${u.id}")`,
     `(frecuencia="${f}" || frecuencia ?= "${f}")`
   ];
   const filter = parts.join(' && ');
