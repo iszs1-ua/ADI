@@ -154,3 +154,4 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173` (o el puerto
 - Revisa la consola del navegador
 - Verifica que la colección "habitos" exista en PocketBase con los campos correctos
 
+- **Framework Visual:** Se ha implementado **Vuetify** en la vista de Login (`LoginView.vue`) como demostración de uso de librerías de componentes UI, cumpliendo con el requisito adicional.
