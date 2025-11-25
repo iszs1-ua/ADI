@@ -2,13 +2,23 @@
 import { defineStore } from 'pinia';
 import { pb } from '@/services/pb';
 
-/**
- * Store de Pinia para gestionar la autenticación del usuario
- * 
- * Este store centraliza:
- * - La información del usuario autenticado
- * - Los métodos de login, registro y logout
- * - El estado de carga y errores de autenticación
+/*
+ * STORE PINIA: AuthStore
+ * * DESCRIPCIÓN:
+ * Centraliza toda la lógica de sesión del usuario. Conecta con PocketBase para
+ * realizar login, registro y logout, y mantiene reactivo el objeto "user"
+ * para que toda la app sepa si hay alguien logueado.
+ * * ESTADO (State):
+ * - user: Objeto con los datos del usuario logueado (o null si no hay sesión).
+ * - error: Mensajes de error (string) si falla el login/registro.
+ * - loading: Booleano para mostrar spinners mientras se conecta al backend.
+ * * GETTERS:
+ * - isAuthenticated: Retorna true si 'user' existe. Útil para guards del router.
+ * * ACCIONES (Actions):
+ * - login(email, password): Autentica contra la colección 'users' de PocketBase.
+ * - register(userData): Crea un usuario nuevo y lo loguea automáticamente.
+ * - logout(): Limpia el token de sesión y el estado local.
+ * - refreshUser(): Actualiza los datos del usuario si cambian en el servidor.
  */
 export const useAuthStore = defineStore('auth', {
   state: () => ({

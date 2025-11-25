@@ -9,15 +9,27 @@ import {
   deleteHabit 
 } from '@/services/habitos';
 
-/**
- * Store de Pinia para gestionar el estado de los hábitos
- * 
- * Este store centraliza:
- * - La lista de hábitos del usuario autenticado
- * - Los métodos de negocio para CRUD de hábitos
- * - El estado de carga y errores
- * - La paginación y filtros de búsqueda
+/*
+ * STORE PINIA: HabitsStore
+ * * DESCRIPCIÓN:
+ * Gestiona la colección de hábitos ("habitos" en PocketBase). Mantiene la lista
+ * local sincronizada con el servidor, maneja la paginación, filtros y la selección
+ * de un hábito específico para edición/detalle.
+ * * ESTADO (State):
+ * - habits: Array principal con la lista de hábitos cargados.
+ * - selectedHabit: Hábito individual seleccionado temporalmente.
+ * - loading / error: Control de estado de red.
+ * - currentPage, perPage, totalPages, totalItems: Variables para controlar la paginación.
+ * - searchQuery, frequencyFilter: Estado de los filtros activos.
+ * * GETTERS:
+ * - hasHabits, completedCount, pendingCount: Cálculos derivados para la UI (contadores).
+ * * ACCIONES (Actions):
+ * - loadHabits(page): Carga la lista paginada desde el servicio.
+ * - searchHabits(q, frecuencia): Carga lista filtrada por búsqueda/tipo.
+ * - createHabit, updateHabit, deleteHabit: Lógica CRUD. Actualizan el estado local inmediatamente para reactividad.
+ * - toggleComplete: Acción rápida para cambiar el booleano 'completado'.
  */
+
 export const useHabitsStore = defineStore('habits', {
   state: () => ({
     // Lista de hábitos del usuario

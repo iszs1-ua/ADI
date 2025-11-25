@@ -57,15 +57,22 @@
 </template>
 
 <script setup>
-/**
- * Componente modal para mostrar los detalles de un hábito
- * 
- * Props:
- * - habit: Objeto con los datos del hábito a mostrar
- * 
- * Eventos:
- * - @close: Se emite cuando se cierra el modal
+import { defineProps, defineEmits } from 'vue';
+/*
+ * COMPONENTE: HabitDetailsModal
+ * * DESCRIPCIÓN:
+ * Modal (ventana emergente) que muestra la información completa de un hábito sin
+ * abandonar la página actual. Incluye un botón para ir a editar.
+ * * PROPS:
+ * - habit (Object, required): El objeto hábito con todos sus datos (nombre, descripción, estado...).
+ * * EVENTOS (Emits):
+ * - @close: Se emite al hacer clic en la "X", en "Cerrar" o en el fondo oscuro.
+ * * MÉTODOS:
+ * - close(): Emite el evento 'close' al padre.
+ * - getFrequencyLabel(frecuencia): Traduce el código de frecuencia a texto legible.
+ * - formatDate(dateString): Convierte la fecha ISO del backend a formato local (día/mes/año).
  */
+
 const props = defineProps({
   habit: {
     type: Object,
