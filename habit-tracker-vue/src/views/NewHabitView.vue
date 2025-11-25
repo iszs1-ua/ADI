@@ -80,23 +80,30 @@
 </template>
 
 <script setup>
+
+/*
+ * COMPONENTE: NewHabitView
+ * * DESCRIPCIÓN:
+ * Formulario para la creación de nuevos hábitos. 
+ * Incluye validaciones de campos obligatorios y gestión de errores visuales.
+ * * ESTADO (Ref/Reactive):
+ * - nombre (ref): Input del nombre del hábito.
+ * - descripcion (ref): TextArea para detalles opcionales.
+ * - frecuencia (ref): Select para la periodicidad.
+ * - errors (reactive): Diccionario de errores de validación local.
+ * - showShake (ref): Controla la animación CSS de error.
+ * * EVENTOS (DOM):
+ * - @submit.prevent="handleSubmit": Procesa la creación del hábito.
+ * * MÉTODOS:
+ * - validateForm(): Verifica que nombre y frecuencia no estén vacíos y cumplan longitud.
+ * - handleSubmit(): Si valida, llama a 'habitsStore.createHabit()' y redirige a '/habits'.
+ * - triggerShake(): Activa el efecto visual de error en el botón.
+ */
+
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useHabitsStore } from '@/stores/habitsStore';
 
-/**
- * Vista para crear un nuevo hábito
- * 
- * Variables reactivas:
- * - nombre: Nombre del hábito
- * - descripcion: Descripción del hábito
- * - frecuencia: Frecuencia del hábito (daily, weekly, 3-times-a-week)
- * - errors: Objeto con errores de validación por campo
- * - showShake: Controla la animación de "temblor" cuando hay error
- * 
- * Eventos:
- * - @submit.prevent: Previene el envío por defecto y valida antes de crear
- */
 const nombre = ref('');
 const descripcion = ref('');
 const frecuencia = ref('');

@@ -102,25 +102,28 @@
 </template>
 
 <script setup>
+
+/*
+ * COMPONENTE: EditHabitView
+ * * DESCRIPCIÓN:
+ * Vista de edición. Reutiliza la lógica del formulario de hábitos pero pre-carga
+ * los datos existentes basándose en el ID de la URL.
+ * * ESTADO (Ref/Reactive):
+ * - habit (ref): Objeto del hábito cargado inicialmente desde el backend.
+ * - nombre, descripcion, frecuencia, completado (refs): Campos del formulario vinculados con v-model.
+ * - errors (reactive): Errores de validación.
+ * * EVENTOS (DOM):
+ * - @submit.prevent="handleSubmit": Envía la actualización (PATCH/PUT).
+ * * MÉTODOS:
+ * - onMounted(): Obtiene el ID de la ruta (route.params.id) y carga el hábito del store para rellenar el form.
+ * - validateForm(): Misma lógica de validación que en creación.
+ * - handleSubmit(): Llama a 'habitsStore.updateHabit()' con los datos modificados.
+ */
+
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useHabitsStore } from '@/stores/habitsStore';
 
-/**
- * Vista para editar un hábito existente
- * 
- * Variables reactivas:
- * - nombre: Nombre del hábito
- * - descripcion: Descripción del hábito
- * - frecuencia: Frecuencia del hábito
- * - completado: Estado de completado
- * - habit: Datos del hábito cargado
- * - errors: Objeto con errores de validación por campo
- * - showShake: Controla la animación de "temblor" cuando hay error
- * 
- * Eventos:
- * - @submit.prevent: Previene el envío por defecto y valida antes de actualizar
- */
 const route = useRoute();
 const router = useRouter();
 const habitsStore = useHabitsStore();

@@ -145,23 +145,35 @@
 </template>
 
 <script setup>
+
+/*
+ * COMPONENTE: HabitsView
+ * * DESCRIPCIÓN:
+ * Vista principal que muestra el listado de hábitos del usuario.
+ * Implementa búsqueda, filtrado por frecuencia y paginación.
+ * También gestiona las acciones de CRUD básicas.
+ * * ESTADO (Ref/Reactive):
+ * - searchQuery (ref): Texto para filtrar hábitos por nombre.
+ * - frequencyFilter (ref): Valor del select para filtrar por frecuencia ('daily'...).
+ * - selectedHabit (ref): Almacena el objeto hábito seleccionado para mostrar en el Modal.
+ * - habits (computed): Array de hábitos traídos desde el store.
+ * - currentPage / totalPages (computed): Datos de paginación desde el store.
+ * * EVENTOS (DOM):
+ * - @input="handleSearch": Reactividad inmediata al escribir en la búsqueda.
+ * - @click="toggleComplete": Marca/Desmarca un hábito.
+ * - @click="viewDetails": Abre el modal pasando el hábito seleccionado.
+ * * MÉTODOS:
+ * - loadHabits(page): Pide al store cargar hábitos. Aplica filtros si existen.
+ * - handleSearch(): Reinicia a la página 1 y recarga los hábitos con los filtros actuales.
+ * - changePage(page): Navegación de paginación.
+ * - toggleComplete(habit): Llama al store para invertir el estado 'completado' de un hábito.
+ * - confirmDelete(habit): Pide confirmación nativa (window.confirm) antes de borrar.
+ * - getFrequencyLabel(frecuencia): Utilidad para traducir códigos ('daily') a texto ('Diario').
+ */
 import { ref, computed, onMounted, watch } from 'vue';
 import { useHabitsStore } from '@/stores/habitsStore';
 import HabitDetailsModal from '@/components/HabitDetailsModal.vue';
 
-/**
- * Vista principal de listado de hábitos
- * 
- * Variables reactivas:
- * - searchQuery: Texto de búsqueda
- * - frequencyFilter: Filtro por frecuencia
- * - selectedHabit: Hábito seleccionado para ver detalles
- * 
- * Eventos:
- * - @input en búsqueda: Dispara búsqueda al escribir
- * - @change en filtro: Dispara búsqueda al cambiar filtro
- * - @click en botones: Acciones sobre hábitos (completar, ver, editar, eliminar)
- */
 const habitsStore = useHabitsStore();
 
 const searchQuery = ref('');

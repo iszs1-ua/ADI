@@ -42,19 +42,24 @@
 </template>
 
 <script setup>
+/*
+ * COMPONENTE: ProfileView
+ * * DESCRIPCIÓN:
+ * Panel de perfil de usuario. Muestra información personal y un resumen estadístico
+ * del rendimiento en sus hábitos (Completados vs Pendientes).
+ * * ESTADO (Ref/Reactive):
+ * - user (computed): Datos del usuario actual obtenidos desde AuthStore.
+ * - totalHabits, completedHabits, pendingHabits (computed): Contadores derivados del HabitsStore.
+ * * MÉTODOS:
+ * - userInitials (computed): Genera las iniciales (ej: "Juan Perez" -> "JP") para el avatar.
+ * - formatDate(dateString): Formatea la fecha de registro a formato local legible.
+ * - handleLogout(): Pide confirmación y ejecuta 'authStore.logout()', redirigiendo al login.
+ */
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useHabitsStore } from '@/stores/habitsStore';
 
-/**
- * Vista de perfil del usuario
- * 
- * Muestra:
- * - Información del usuario (nombre, email, fecha de registro)
- * - Estadísticas de hábitos (totales, completados, pendientes)
- * - Botón para cerrar sesión
- */
 const authStore = useAuthStore();
 const habitsStore = useHabitsStore();
 const router = useRouter();

@@ -36,18 +36,24 @@
 </template>
 
 <script setup>
+
+/*
+ * COMPONENTE: HomeView
+ * * DESCRIPCIÓN:
+ * Dashboard de bienvenida. Sirve como página de aterrizaje ("Landing internal") tras el login.
+ * Ofrece un vistazo rápido de estadísticas y botones de acción rápida.
+ * * ESTADO:
+ * - user (computed): Obtiene el nombre del usuario para el saludo.
+ * - totalHabits, completedHabits, pendingHabits (computed): Estadísticas traídas del store.
+ * * MÉTODOS:
+ * - onMounted(): Fuerza la carga de hábitos (100 items) para asegurar que las estadísticas sean precisas.
+ */
+
 import { computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useHabitsStore } from '@/stores/habitsStore';
 
-/**
- * Vista principal (Dashboard/Home)
- * 
- * Muestra:
- * - Saludo personalizado al usuario
- * - Resumen de estadísticas de hábitos
- * - Accesos rápidos a las funcionalidades principales
- */
+
 const authStore = useAuthStore();
 const habitsStore = useHabitsStore();
 

@@ -53,6 +53,23 @@
 </template>
 
 <script setup>
+/*
+ * COMPONENTE: LoginView
+ * * DESCRIPCIÓN:
+ * Gestiona la entrada con un inicio de sesión (email y contraseña),
+ * valida campos vacíos y da un token de autentificación.
+ * * ESTADO (Ref/Reactive):
+ * - email (ref): Almacena el correo electrónico introducido por el usuario.
+ * - password (ref): Almacena la contraseña del usuario.
+ * - loading (computed): Muestra estado de carga desde el store (deshabilita botón).
+ * - error (computed): Muestra mensajes de error de autenticación desde el store.
+ * * EVENTOS (DOM):
+ * - @submit.prevent="handleLogin": Coge el envío del formulario y procesar el registro.
+ * * MÉTODOS:
+ * - handleLogin(): 
+ * Verifica que los campos no estén vacíos. Llama a 'auth.login()' y, si es exitoso,
+ * redirige al usuario a la vista de hábitos ('/habits').
+ */
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';

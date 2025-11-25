@@ -88,24 +88,31 @@
 </template>
 
 <script setup>
+/*
+ * COMPONENTE: RegisterView
+ * * DESCRIPCIÓN:
+ * Registro de nuevos usuarios. Gestiona un formulario completo con validación
+ * en cliente (longitud, coincidencia de contraseñas, formato email) antes de enviar.
+ * * ESTADO (Ref/Reactive):
+ * - username (ref): Input para el nombre de usuario.
+ * - email (ref): Input para el correo electrónico.
+ * - password (ref): Input para la contraseña.
+ * - passwordConfirm (ref): Input para repetir la contraseña.
+ * - errors (reactive): Objeto que acumula mensajes de error por campo (ej: errors.email).
+ * - showShake (ref): Booleano para activar la clase CSS de animación de "temblor".
+ * - loading (computed): Estado de carga desde el AuthStore.
+ * - error (computed): Error global del backend desde el AuthStore.
+ * * EVENTOS (DOM):
+ * - @submit.prevent="handleRegister": Envía el formulario evitando recarga de página.
+ * * MÉTODOS:
+ * - validateForm(): Comprueba reglas de negocio (longitud, regex email, igualdad passwords). Retorna true/false.
+ * - handleRegister(): Ejecuta la validación y llama a 'auth.register()'. Si falla, activa 'triggerShake()'.
+ * - triggerShake(): Activa la animación visual de error en el botón durante 500ms.
+ */
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
-/**
- * Componente de registro de usuario
- * 
- * Variables reactivas:
- * - username: Nombre de usuario del formulario
- * - email: Email del formulario
- * - password: Contraseña del formulario
- * - passwordConfirm: Confirmación de contraseña
- * - errors: Objeto con errores de validación por campo
- * - showShake: Controla la animación de "temblor" cuando hay error
- * 
- * Eventos:
- * - @submit.prevent: Previene el envío por defecto y valida antes de registrar
- */
 const username = ref('');
 const email = ref('');
 const password = ref('');
