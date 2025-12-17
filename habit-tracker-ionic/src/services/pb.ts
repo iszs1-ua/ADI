@@ -28,11 +28,13 @@ export function isLogged(): boolean {
 
 /**
  * Requiere que haya un usuario autenticado
- * @returns {Object} Usuario actual
+ * @returns {Object} Usuario actual (nunca null)
  * @throws {Error} Si no hay usuario autenticado
  */
-export function requireAuth() {
+export function requireAuth(): NonNullable<ReturnType<typeof currentUser>> {
   if (!isLogged()) throw new Error('No autenticado');
-  return currentUser();
+  const user = currentUser();
+  if (!user) throw new Error('No autenticado');
+  return user as NonNullable<ReturnType<typeof currentUser>>;
 }
 

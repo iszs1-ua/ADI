@@ -125,12 +125,21 @@ function editHabit() {
 /**
  * Retorna la etiqueta en español para la frecuencia
  */
-function getFrequencyLabel(frecuencia: string): string {
+function getFrequencyLabel(frecuencia: string | null | undefined): string {
+  if (!frecuencia) {
+    return 'Sin frecuencia';
+  }
+  
   const labels: Record<string, string> = {
+    'Diario': 'Diario',
+    'Semanal': 'Semanal',
+    'Mensual': 'Mensual',
+    // Compatibilidad con valores antiguos en inglés
     'daily': 'Diario',
     'weekly': 'Semanal',
-    '3-times-a-week': '3 veces por semana',
+    '3-times-a-week': 'Mensual',
   };
+  
   return labels[frecuencia] || frecuencia;
 }
 

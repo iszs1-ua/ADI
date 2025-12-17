@@ -7,24 +7,51 @@ import { pb, requireAuth } from './pb.js';
  * Todas las operaciones requieren autenticación.
  */
 
-// Mapeo de valores del formulario a valores de PocketBase (en español)
-const FREQ_MAP: Record<string, string> = {
-  // Valores en inglés (del formulario) -> Valores en español (PocketBase)
+// Mapeo de valores del formulario (español) a valores de PocketBase (inglés)
+const FREQ_MAP_TO_POCKETBASE: Record<string, string> = {
+  // Valores en español (del formulario) -> Valores en inglés (PocketBase)
+  'Diario': 'daily',
+  'Semanal': 'weekly',
+  'Mensual': '3-times-a-week',
+  // También aceptar valores en inglés directamente (por si acaso)
+  'daily': 'daily',
+  'weekly': 'weekly',
+  '3-times-a-week': '3-times-a-week',
+  '3xweek': '3-times-a-week',
+  '3_per_week': '3-times-a-week',
+};
+
+// Mapeo inverso: de PocketBase (inglés) a formulario (español)
+const FREQ_MAP_FROM_POCKETBASE: Record<string, string> = {
   'daily': 'Diario',
   'weekly': 'Semanal',
   '3-times-a-week': 'Mensual',
   '3xweek': 'Mensual',
   '3_per_week': 'Mensual',
-  // También mapear valores en español directamente
-  'Diario': 'Diario',
-  'Semanal': 'Semanal',
-  'Mensual': 'Mensual',
 };
 
-const normalizeFrequency = (f: string): string => {
-  const normalized = (FREQ_MAP[f] ?? f)?.trim();
+/**
+ * Normaliza la frecuencia del formulario (español) a formato PocketBase (inglés)
+ */
+const normalizeFrequencyToPocketBase = (f: string): string => {
+  const normalized = (FREQ_MAP_TO_POCKETBASE[f] ?? f)?.trim();
   // Asegurarse de que sea uno de los valores válidos de PocketBase
+  const validValues = ['daily', 'weekly', '3-times-a-week'];
+  return validValues.includes(normalized) ? normalized : 'daily';
+};
+
+/**
+ * Normaliza la frecuencia de PocketBase (inglés) a formato formulario (español)
+ */
+const normalizeFrequencyFromPocketBase = (f: string): string => {
+  const normalized = (FREQ_MAP_FROM_POCKETBASE[f] ?? f)?.trim();
+  // Valores válidos en español para la UI
   const validValues = ['Diario', 'Semanal', 'Mensual'];
+  // Si viene en inglés, convertir a español
+  if (FREQ_MAP_FROM_POCKETBASE[normalized]) {
+    return FREQ_MAP_FROM_POCKETBASE[normalized];
+  }
+  // Si ya está en español, devolverlo
   return validValues.includes(normalized) ? normalized : 'Diario';
 };
 
@@ -47,8 +74,8 @@ export async function createHabit({
 }) {
   const u = requireAuth();
   
-  // Normalizar la frecuencia a valores en español que espera PocketBase
-  const normalizedFreq = frecuencia ? normalizeFrequency(frecuencia) : 'Diario';
+  // Normalizar la frecuencia del formulario (español) a formato PocketBase (inglés)
+  const normalizedFreq = frecuencia ? normalizeFrequencyToPocketBase(frecuencia) : 'daily';
   
   console.log('=== CREATING HABIT ===');
   console.log('User ID:', u.id);
@@ -61,24 +88,24 @@ export async function createHabit({
   console.log('Nombre:', nombre);
   console.log('Descripción:', descripcion);
   
-  // Construir el objeto de datos - usar valores en español que espera PocketBase
+  // Construir el objeto de datos - usar valores en inglés que espera PocketBase
   // Asegurarse de que frecuencia sea un string válido
-  // IMPORTANTE: PocketBase espera "Frecuencia" (mayúscula), no "frecuencia" (minúscula)
-  const freqValue = normalizedFreq && typeof normalizedFreq === 'string' ? normalizedFreq.trim() : 'Diario';
+  // PocketBase espera "frecuencia" (minúscula) con valores en inglés
+  const freqValue = normalizedFreq && typeof normalizedFreq === 'string' ? normalizedFreq.trim() : 'daily';
   
   const habitData: Record<string, any> = {
     nombre: nombre.trim(),
     descripcion: descripcion || '',
-    Frecuencia: freqValue, // Usar mayúscula porque PocketBase lo espera así
+    frecuencia: freqValue, // Usar minúscula (nombre estándar en PocketBase)
     completado: false,
     user: u.id,
   };
   
   console.log('=== SENDING TO POCKETBASE ===');
   console.log('Full habitData:', JSON.stringify(habitData, null, 2));
-  console.log('habitData.Frecuencia:', habitData.Frecuencia);
-  console.log('habitData.Frecuencia type:', typeof habitData.Frecuencia);
-  console.log('habitData.Frecuencia length:', habitData.Frecuencia?.length);
+  console.log('habitData.frecuencia:', habitData.frecuencia);
+  console.log('habitData.frecuencia type:', typeof habitData.frecuencia);
+  console.log('habitData.frecuencia length:', habitData.frecuencia?.length);
   console.log('habitData keys:', Object.keys(habitData));
   
   try {
@@ -88,7 +115,11 @@ export async function createHabit({
       const frecuenciaField = collectionInfo.schema?.find((f: any) => f.name === 'frecuencia' || f.name === 'Frecuencia');
       if (frecuenciaField) {
         console.log('Frecuencia field config:', JSON.stringify(frecuenciaField, null, 2));
+        console.log('Field name:', frecuenciaField.name);
         console.log('Allowed values:', frecuenciaField.options?.values || frecuenciaField.options?.list);
+      } else {
+        console.warn('⚠️ No se encontró el campo frecuencia en el esquema');
+        console.log('Available fields:', collectionInfo.schema?.map((f: any) => f.name));
       }
     } catch (infoError) {
       console.warn('Could not get collection info:', infoError);
@@ -106,27 +137,50 @@ export async function createHabit({
     console.log('Full result:', JSON.stringify(result, null, 2));
     
     // Verificar que la frecuencia se guardó correctamente
-    // PocketBase devuelve el campo como "Frecuencia" (mayúscula)
-    const savedFreq = (result as any).Frecuencia;
+    // Intentar obtener la frecuencia de ambos nombres posibles
+    const savedFreq = result.frecuencia || (result as any).Frecuencia || (result as any).frequency || (result as any).Frequency;
     console.log('Saved frequency value:', savedFreq);
     console.log('Saved frequency type:', typeof savedFreq);
+    console.log('All result keys:', Object.keys(result));
     
     if (!savedFreq || savedFreq === '') {
       console.error('❌ ERROR: Frecuencia was not saved!');
       console.error('Expected:', normalizedFreq);
       console.error('Got:', savedFreq);
       console.error('Full result object keys:', Object.keys(result));
-      console.error('Full result:', result);
+      console.error('Full result:', JSON.stringify(result, null, 2));
+      
+      // Intentar actualizar el hábito con la frecuencia si no se guardó
+      try {
+        console.log('Attempting to update habit with frecuencia...');
+        const updated = await pb.collection('habitos').update(result.id, { frecuencia: normalizedFreq });
+        console.log('Updated habit with frecuencia:', updated);
+        result.frecuencia = normalizedFreq;
+      } catch (updateError: any) {
+        console.error('Failed to update frecuencia:', updateError);
+        // Si falla, al menos establecerlo en el objeto local (en inglés para PocketBase)
+        result.frecuencia = normalizedFreq;
+      }
     } else if (savedFreq !== normalizedFreq) {
       console.warn('⚠️ WARNING: Frecuencia mismatch!');
       console.warn('Expected:', normalizedFreq);
       console.warn('Got:', savedFreq);
+      // Intentar corregir
+      try {
+        const updated = await pb.collection('habitos').update(result.id, { frecuencia: normalizedFreq });
+        result.frecuencia = normalizedFreq;
+      } catch (updateError: any) {
+        console.error('Failed to correct frecuencia:', updateError);
+        result.frecuencia = normalizedFreq;
+      }
     } else {
       console.log('✅ Frecuencia saved correctly:', savedFreq);
     }
     
-    // Normalizar el resultado antes de devolverlo
-    return normalizeHabit(result);
+    // Normalizar el resultado antes de devolverlo (esto asegura que siempre tengamos frecuencia)
+    const normalized = normalizeHabit(result);
+    console.log('Normalized habit frecuencia:', normalized.frecuencia);
+    return normalized;
   } catch (error: any) {
     console.error('❌ ERROR creating habit:', error);
     console.error('Error response:', error.response);
@@ -134,16 +188,22 @@ export async function createHabit({
     console.error('Error status:', error.status);
     console.error('Habit data that failed:', habitData);
     
-    // Si el error es sobre frecuencia, intentar sin ella primero
-    if (error.response?.data?.frecuencia) {
-      console.log('Error seems related to frecuencia field, trying without it...');
-      const habitDataWithoutFreq = { ...habitData };
-      delete habitDataWithoutFreq.frecuencia;
+    // Si el error es sobre frecuencia, intentar con el nombre alternativo
+    if (error.response?.data?.frecuencia || error.response?.data?.Frecuencia) {
+      console.log('Error seems related to frecuencia field, trying with alternative name...');
+      const habitDataAlt = { ...habitData };
+      // Intentar con el nombre alternativo
+      if ('Frecuencia' in habitDataAlt) {
+        delete habitDataAlt.Frecuencia;
+        habitDataAlt.frecuencia = normalizedFreq;
+      } else if ('frecuencia' in habitDataAlt) {
+        delete habitDataAlt.frecuencia;
+        habitDataAlt.Frecuencia = normalizedFreq;
+      }
       try {
-        const result = await pb.collection('habitos').create(habitDataWithoutFreq);
-        console.log('Created without frecuencia, now updating...');
-        const updated = await pb.collection('habitos').update(result.id, { frecuencia: normalizedFreq });
-        return updated;
+        const result = await pb.collection('habitos').create(habitDataAlt);
+        console.log('Created with alternative field name, normalizing...');
+        return normalizeHabit(result);
       } catch (retryError: any) {
         console.error('Retry also failed:', retryError);
       }
@@ -155,16 +215,49 @@ export async function createHabit({
 
 /**
  * Normaliza un hábito para convertir Frecuencia (mayúscula) a frecuencia (minúscula)
+ * Asegura que siempre tengamos frecuencia en minúscula para consistencia
  */
 function normalizeHabit(habit: any): any {
-  // Si tiene Frecuencia (mayúscula) pero no frecuencia (minúscula), normalizar
-  if ((habit as any).Frecuencia !== undefined && habit.frecuencia === undefined) {
-    habit.frecuencia = (habit as any).Frecuencia;
+  if (!habit) return habit;
+  
+  // Buscar el campo de frecuencia en cualquier variante posible
+  let freqValue: string | undefined = undefined;
+  
+  // Intentar diferentes nombres de campo posibles
+  if (habit.frecuencia !== undefined && habit.frecuencia !== null && habit.frecuencia !== '') {
+    freqValue = habit.frecuencia;
+  } else if ((habit as any).Frecuencia !== undefined && (habit as any).Frecuencia !== null && (habit as any).Frecuencia !== '') {
+    freqValue = (habit as any).Frecuencia;
+  } else if ((habit as any).frequency !== undefined && (habit as any).frequency !== null && (habit as any).frequency !== '') {
+    freqValue = (habit as any).frequency;
+  } else if ((habit as any).Frequency !== undefined && (habit as any).Frequency !== null && (habit as any).Frequency !== '') {
+    freqValue = (habit as any).Frequency;
   }
-  // Si tiene frecuencia pero está vacío y Frecuencia tiene valor, usar Frecuencia
-  if ((!habit.frecuencia || habit.frecuencia === '') && (habit as any).Frecuencia) {
-    habit.frecuencia = (habit as any).Frecuencia;
+  
+  // Si encontramos un valor, normalizarlo y asignarlo
+  // Convertir de PocketBase (inglés) a español para la UI
+  if (freqValue) {
+    const normalized = normalizeFrequencyFromPocketBase(freqValue);
+    habit.frecuencia = normalized;
+    // Limpiar variantes alternativas para evitar confusión
+    if ((habit as any).Frecuencia) delete (habit as any).Frecuencia;
+    if ((habit as any).frequency) delete (habit as any).frequency;
+    if ((habit as any).Frequency) delete (habit as any).Frequency;
+  } else {
+    // Si no hay frecuencia, dejar null/undefined para que se muestre "Sin frecuencia"
+    console.warn('⚠️ Habit has no frecuencia field:', {
+      id: habit.id,
+      nombre: habit.nombre,
+      allKeys: Object.keys(habit),
+      frecuencia: habit.frecuencia,
+      Frecuencia: (habit as any).Frecuencia,
+      frequency: (habit as any).frequency,
+      Frequency: (habit as any).Frequency
+    });
+    // No establecer valor por defecto, dejar null/undefined para mostrar "Sin frecuencia"
+    habit.frecuencia = null;
   }
+  
   return habit;
 }
 
@@ -326,12 +419,18 @@ export async function searchMyHabits({
   }
 
   if (frecuencia) {
-    const f = normalizeFrequency(frecuencia);
+    // Convertir de español (formulario) a inglés (PocketBase) para el filtro
+    const f = normalizeFrequencyToPocketBase(frecuencia);
+    console.log('🔍 Filtering by frequency:', {
+      input: frecuencia,
+      converted: f
+    });
+    // Usar minúscula (nombre estándar en PocketBase) con valores en inglés
     parts.push(`frecuencia="${f}"`);
   }
 
   const filter = parts.join(' && ');
-  console.debug('[searchMyHabits] filter =>', filter);
+  console.log('[searchMyHabits] Filter query:', filter);
 
   const result = await pb.collection('habitos').getList(page, perPage, { sort, filter });
   
@@ -361,7 +460,20 @@ export const getHabit = async (id: string) => {
  * @returns {Promise<Object>} Hábito actualizado
  */
 export const updateHabit = async (id: string, data: Record<string, any>) => {
-  const habit = await pb.collection('habitos').update(id, data);
+  // Normalizar la frecuencia si está presente (de español a inglés para PocketBase)
+  const updateData = { ...data };
+  if (updateData.frecuencia !== undefined || (updateData as any).Frecuencia !== undefined) {
+    const freqValue = updateData.frecuencia || (updateData as any).Frecuencia;
+    const normalizedFreq = normalizeFrequencyToPocketBase(freqValue);
+    // Usar minúscula (nombre estándar en PocketBase) con valores en inglés
+    updateData.frecuencia = normalizedFreq;
+    // Eliminar mayúscula si existe
+    if ((updateData as any).Frecuencia) {
+      delete (updateData as any).Frecuencia;
+    }
+  }
+  
+  const habit = await pb.collection('habitos').update(id, updateData);
   return normalizeHabit(habit);
 };
 

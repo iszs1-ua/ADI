@@ -61,10 +61,6 @@
               <h2>{{ habit.nombre }}</h2>
               <p>{{ getFrequencyLabel(habit.frecuencia) }}</p>
               <p v-if="habit.descripcion">{{ habit.descripcion }}</p>
-              <!-- Debug: mostrar frecuencia raw -->
-              <p v-if="!habit.frecuencia" style="color: red; font-size: 0.8em;">
-                ⚠️ Frecuencia no definida
-              </p>
             </ion-label>
           </ion-item>
           
@@ -257,15 +253,21 @@ onMounted(async () => {
  * Carga los hábitos (con o sin filtros)
  */
 function loadHabits(page = 1) {
-  if (searchQuery.value || frequencyFilter.value) {
+  // Si hay búsqueda o filtro, usar searchHabits
+  if (searchQuery.value.trim() || frequencyFilter.value) {
+    console.log('🔍 Searching habits with filters:', {
+      search: searchQuery.value,
+      frequency: frequencyFilter.value
+    });
     habitsStore.searchHabits({
-      q: searchQuery.value,
-      frecuencia: frequencyFilter.value,
+      q: searchQuery.value.trim(),
+      frecuencia: frequencyFilter.value || undefined, // Solo enviar si hay valor
       page,
       perPage: 100, // Cargar más para tener todos los resultados
     });
   } else {
     // Cargar todos los hábitos del usuario (hasta 100)
+    console.log('📋 Loading all habits');
     habitsStore.loadHabits({ page, perPage: 100 });
   }
 }
@@ -374,8 +376,7 @@ async function handleLogout() {
  */
 function getFrequencyLabel(frecuencia: string | null | undefined): string {
   if (!frecuencia) {
-    console.warn('Habit has no frecuencia:', frecuencia);
-    return 'N/A';
+    return 'Sin frecuencia';
   }
   
   // Los valores ya están en español en PocketBase, solo devolverlos directamente

@@ -41,9 +41,9 @@
             v-model="frecuencia"
             :class="{ 'ion-invalid': errors.frecuencia }"
           >
-            <ion-select-option value="daily">Diario</ion-select-option>
-            <ion-select-option value="weekly">Semanal</ion-select-option>
-            <ion-select-option value="3-times-a-week">3 veces por semana</ion-select-option>
+            <ion-select-option value="Diario">Diario</ion-select-option>
+            <ion-select-option value="Semanal">Semanal</ion-select-option>
+            <ion-select-option value="Mensual">Mensual</ion-select-option>
           </ion-select>
           <ion-note slot="error" v-if="errors.frecuencia">{{ errors.frecuencia }}</ion-note>
         </ion-item>
