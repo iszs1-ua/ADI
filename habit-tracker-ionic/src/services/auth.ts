@@ -22,25 +22,25 @@ export async function login(email: string, password: string) {
 /**
  * Registra un nuevo usuario y lo autentica automáticamente
  * @param {Object} userData - Datos del usuario
- * @param {string} userData.username - Nombre de usuario
+ * @param {string} userData.name - Nombre de usuario
  * @param {string} userData.email - Email del usuario
  * @param {string} userData.password - Contraseña
  * @param {string} userData.passwordConfirm - Confirmación de contraseña
  * @returns {Promise<Object>} Usuario creado y autenticado
  */
 export async function register({ 
-  username, 
+  name, 
   email, 
   password, 
   passwordConfirm 
 }: { 
-  username: string; 
+  name: string; 
   email: string; 
   password: string; 
   passwordConfirm: string;
 }) {
-  // Crear el usuario
-  await pb.collection('users').create({ username, email, password, passwordConfirm });
+  // Crear el usuario con el campo 'name'
+  await pb.collection('users').create({ name, email, password, passwordConfirm });
   
   // Autenticar automáticamente después del registro
   const authData = await login(email, password);
@@ -61,5 +61,26 @@ export async function register({
  */
 export function logout() {
   pb.authStore.clear();
+}
+
+/**
+ * Actualiza el perfil del usuario
+ * @param {Object} userData - Datos a actualizar
+ * @param {string} userData.name - Nuevo nombre de usuario (opcional)
+ * @returns {Promise<Object>} Usuario actualizado
+ */
+export async function updateProfile({ name }: { name?: string }) {
+  const u = currentUser();
+  if (!u) throw new Error('No autenticado');
+
+  const data: Record<string, any> = {};
+  if (name !== undefined) {
+    data.name = name;
+  }
+
+  const updated = await pb.collection('users').update(u.id, data);
+  // Actualizar el authStore con los nuevos datos
+  pb.authStore.save(pb.authStore.token, updated);
+  return updated;
 }
 

@@ -283,101 +283,38 @@ export async function listMyHabits({
   console.log('User ID:', u.id);
   console.log('User ID type:', typeof u.id);
   
-  // Cargar todos los hábitos sin filtro (las RLS deberían filtrar automáticamente)
-  // y luego filtrar manualmente por seguridad
+  // Usar filtro explícito para asegurar que solo se obtengan los hábitos del usuario actual
   try {
-    console.log('Loading habits without explicit filter (relying on RLS)...');
-    // Cargar más items para asegurar que obtenemos todos los hábitos del usuario
-    // Usar expand para obtener el usuario completo si es necesario
+    console.log('Loading habits with explicit user filter...');
+    const filter = `user.id="${u.id}"`;
+    console.log('Filter:', filter);
+    
     const result = await pb.collection('habitos').getList(page, perPage > 100 ? perPage : 100, { 
       sort,
-      expand: 'user' // Expandir la relación user para ver el formato
+      filter,
     });
-    console.log('Habits loaded (RLS filter):', result.items.length);
+    
+    console.log('Habits loaded with filter:', result.items.length);
     console.log('Total items from server:', result.totalItems);
     
-    // Verificar que todos los hábitos pertenecen al usuario (por seguridad)
-    // El campo user puede ser un string (ID) o un objeto expandido
-    if (result.items.length > 0) {
-      console.log('Sample habit structure (first item):', JSON.stringify({
-        id: result.items[0].id,
-        nombre: result.items[0].nombre,
-        user: result.items[0].user,
-        userType: typeof result.items[0].user,
-        expand: result.items[0].expand,
-        allKeys: Object.keys(result.items[0])
-      }, null, 2));
-    }
-    
-    const userHabits = result.items.filter((h: any) => {
-      let habitUserId: string | null = null;
-      
-      // Intentar obtener el ID del usuario de diferentes formas
-      // 1. Si user es un string, es el ID directamente
-      if (typeof h.user === 'string') {
-        habitUserId = h.user;
-      }
-      // 2. Si user es un objeto, puede tener .id
-      else if (h.user && typeof h.user === 'object') {
-        if (h.user.id) {
-          habitUserId = h.user.id;
-        }
-      }
-      // 3. Si está expandido, el usuario está en expand.user
-      else if (h.expand && h.expand.user) {
-        if (typeof h.expand.user === 'string') {
-          habitUserId = h.expand.user;
-        } else if (h.expand.user.id) {
-          habitUserId = h.expand.user.id;
-        }
-      }
-      
-      // También verificar si hay un campo "usuario" (por si acaso hay datos antiguos)
-      if (!habitUserId && h.usuario) {
-        if (typeof h.usuario === 'string') {
-          habitUserId = h.usuario;
-        } else if (h.usuario && h.usuario.id) {
-          habitUserId = h.usuario.id;
-        }
-      }
-      
-      // Log detallado para debug
-      const matches = habitUserId ? String(habitUserId) === String(u.id) : false;
-      
-      console.log('Checking habit:', {
-        habitId: h.id,
-        habitNombre: h.nombre,
-        userField: h.user,
-        userFieldType: typeof h.user,
-        habitUserId: habitUserId,
-        currentUserId: u.id,
-        matches: matches
-      });
-      
-      return matches;
-    });
-    
-    console.log(`Filtered ${result.items.length} habits to ${userHabits.length} user habits`);
-    console.log('User habits:', userHabits.map((h: any) => ({ id: h.id, nombre: h.nombre, user: h.user })));
-    
     // Normalizar los hábitos para convertir Frecuencia (mayúscula) a frecuencia (minúscula)
-    const normalizedHabits = userHabits.map((h: any) => normalizeHabit(h));
+    const normalizedHabits = result.items.map((h: any) => normalizeHabit(h));
     
     // Aplicar paginación manual si es necesario
     const startIndex = (page - 1) * perPage;
     const endIndex = startIndex + perPage;
     const paginatedHabits = normalizedHabits.slice(startIndex, endIndex);
     
-    // Siempre devolver solo los hábitos del usuario con paginación correcta
+    // Devolver los hábitos del usuario con paginación correcta
     return {
       page,
       perPage,
-      totalItems: userHabits.length,
-      totalPages: Math.ceil(userHabits.length / perPage),
+      totalItems: result.totalItems,
+      totalPages: result.totalPages,
       items: paginatedHabits
     };
   } catch (error: any) {
-    console.error('Error loading without filter:', error);
+    console.error('Error loading habits with filter:', error);
     console.error('Error response:', error.response);
     console.error('Error data:', error.response?.data);
     throw error;

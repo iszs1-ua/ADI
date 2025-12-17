@@ -290,6 +290,23 @@ export const useHabitsStore = defineStore('habits', {
       this.searchQuery = '';
       this.frequencyFilter = '';
     },
+
+    /**
+     * Limpia todos los hábitos y resetea el estado
+     * Útil cuando el usuario cierra sesión o cambia de usuario
+     */
+    clearHabits() {
+      this.habits = [];
+      this.selectedHabit = null;
+      this.loading = false;
+      this.error = null;
+      this.currentPage = 1;
+      this.perPage = 10;
+      this.totalPages = 1;
+      this.totalItems = 0;
+      this.searchQuery = '';
+      this.frequencyFilter = '';
+    },
   },
 });
 

@@ -1,10 +1,13 @@
 <!-- src/views/HabitsPage.vue -->
 <template>
   <ion-page>
-    <ion-header>
+      <ion-header>
       <ion-toolbar>
         <ion-title>Mis Hábitos</ion-title>
         <ion-buttons slot="end">
+          <ion-button @click="router.push('/profile')">
+            <ion-icon :icon="personOutline"></ion-icon>
+          </ion-button>
           <ion-button @click="handleLogout">
             <ion-icon :icon="logOutOutline"></ion-icon>
           </ion-button>
@@ -48,32 +51,79 @@
         </ion-fab-button>
       </ion-fab>
 
-      <!-- Lista de hábitos -->
-      <ion-list v-if="!loading && hasHabits">
-        <ion-item-sliding v-for="habit in habits" :key="habit.id">
-          <ion-item>
-            <ion-checkbox
-              :checked="habit.completado"
-              @ionChange="toggleComplete(habit)"
-              slot="start"
-            ></ion-checkbox>
-            <ion-label @click="viewDetails(habit)">
-              <h2>{{ habit.nombre }}</h2>
-              <p>{{ getFrequencyLabel(habit.frecuencia) }}</p>
-              <p v-if="habit.descripcion">{{ habit.descripcion }}</p>
-            </ion-label>
-          </ion-item>
+      <!-- Lista de hábitos en tarjetas -->
+      <div v-if="!loading && hasHabits" class="habits-grid">
+        <ion-card
+          v-for="habit in habits"
+          :key="habit.id"
+          class="habit-card"
+          :class="{ 'habit-card--completed': habit.completado }"
+        >
+          <ion-card-header>
+            <div class="habit-card__header">
+              <ion-card-title class="habit-card__title">{{ habit.nombre }}</ion-card-title>
+              <ion-badge 
+                class="habit-card__badge"
+                :color="getFrequencyBadgeColor(habit.frecuencia)"
+              >
+                {{ getFrequencyLabel(habit.frecuencia) }}
+              </ion-badge>
+            </div>
+          </ion-card-header>
           
-          <ion-item-options side="end">
-            <ion-item-option color="primary" @click="editHabit(habit.id)">
-              <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
-            </ion-item-option>
-            <ion-item-option color="danger" @click="confirmDelete(habit)">
-              <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
-            </ion-item-option>
-          </ion-item-options>
-        </ion-item-sliding>
-      </ion-list>
+          <ion-card-content>
+            <p v-if="habit.descripcion" class="habit-card__description">
+              {{ habit.descripcion }}
+            </p>
+            
+            <div class="habit-card__actions">
+              <ion-button
+                :color="habit.completado ? 'success' : 'primary'"
+                fill="solid"
+                expand="block"
+                @click="toggleComplete(habit)"
+                class="habit-card__button"
+              >
+                <ion-icon 
+                  :icon="habit.completado ? checkmarkCircle : checkmarkCircleOutline" 
+                  slot="start"
+                ></ion-icon>
+                {{ habit.completado ? 'Completado' : 'Marcar como completado' }}
+              </ion-button>
+              
+              <div class="habit-card__secondary-actions">
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  @click="viewDetails(habit)"
+                >
+                  <ion-icon :icon="informationCircleOutline" slot="start"></ion-icon>
+                  Detalles
+                </ion-button>
+                
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  @click="editHabit(habit.id)"
+                >
+                  <ion-icon :icon="createOutline" slot="start"></ion-icon>
+                  Editar
+                </ion-button>
+                
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  color="danger"
+                  @click="confirmDelete(habit)"
+                >
+                  <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                  Eliminar
+                </ion-button>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
 
       <!-- Mensaje cuando no hay hábitos -->
       <div v-if="!loading && !hasHabits" class="empty-state">
@@ -158,7 +208,7 @@
  * - getFrequencyLabel(frecuencia): Utilidad para traducir códigos ('daily') a texto ('Diario').
  */
 
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   IonPage,
@@ -169,16 +219,16 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
-  IonList,
-  IonItem,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
-  IonLabel,
-  IonCheckbox,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonBadge,
   IonSearchbar,
   IonSelect,
   IonSelectOption,
+  IonItem,
+  IonLabel,
   IonFab,
   IonFabButton,
   IonFooter,
@@ -192,6 +242,10 @@ import {
   logOutOutline,
   createOutline,
   trashOutline,
+  personOutline,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  informationCircleOutline,
 } from 'ionicons/icons';
 import { useHabitsStore } from '@/stores/habitsStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -214,12 +268,11 @@ const currentPage = computed(() => habitsStore.currentPage);
 const totalPages = computed(() => habitsStore.totalPages);
 
 /**
- * Carga los hábitos al montar el componente
+ * Función para cargar los hábitos del usuario actual
  */
-onMounted(async () => {
+async function initializeHabits() {
   // Verificar autenticación en PocketBase directamente
   const { pb } = await import('@/services/pb');
-  const { isLogged } = await import('@/services/pb');
   
   console.log('PocketBase auth valid:', pb.authStore.isValid);
   console.log('PocketBase user:', pb.authStore.model);
@@ -240,6 +293,10 @@ onMounted(async () => {
   
   console.log('Usuario autenticado:', authStore.user);
   
+  // Limpiar hábitos siempre para evitar mostrar hábitos de otro usuario
+  console.log('Limpiando hábitos previos antes de cargar...');
+  habitsStore.clearHabits();
+  
   // Test de conexión
   await testPocketBaseConnection();
   
@@ -247,7 +304,36 @@ onMounted(async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
   
   loadHabits();
+}
+
+/**
+ * Carga los hábitos al montar el componente
+ */
+onMounted(async () => {
+  await initializeHabits();
 });
+
+/**
+ * Recarga los hábitos cuando el componente se reactiva (si está en keep-alive)
+ */
+onActivated(async () => {
+  console.log('Component activated, reloading habits...');
+  await initializeHabits();
+});
+
+/**
+ * Watch para detectar cambios de usuario y recargar hábitos
+ */
+watch(
+  () => authStore.user?.id,
+  async (newUserId, oldUserId) => {
+    if (newUserId && newUserId !== oldUserId) {
+      console.log('User changed, reloading habits...', { oldUserId, newUserId });
+      await initializeHabits();
+    }
+  },
+  { immediate: false }
+);
 
 /**
  * Carga los hábitos (con o sin filtros)
@@ -397,16 +483,130 @@ function getFrequencyLabel(frecuencia: string | null | undefined): string {
   }
   return label;
 }
+
+/**
+ * Retorna el color del badge según la frecuencia
+ */
+function getFrequencyBadgeColor(frecuencia: string | null | undefined): string {
+  if (!frecuencia) return 'medium';
+  
+  const colorMap: Record<string, string> = {
+    'Diario': 'primary',
+    'Semanal': 'success',
+    'Mensual': 'warning',
+    'daily': 'primary',
+    'weekly': 'success',
+    '3-times-a-week': 'warning',
+  };
+  
+  return colorMap[frecuencia] || 'medium';
+}
 </script>
 
 <style scoped>
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.habit-card {
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.habit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.habit-card--completed {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-left: 4px solid #4caf50;
+}
+
+.habit-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.habit-card__title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0;
+  flex: 1;
+}
+
+.habit-card--completed .habit-card__title {
+  color: #1b5e20;
+}
+
+.habit-card__badge {
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.habit-card__description {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0.75rem 0;
+  min-height: 2.5rem;
+}
+
+.habit-card--completed .habit-card__description {
+  color: #555;
+}
+
+.habit-card__actions {
+  margin-top: 1rem;
+}
+
+.habit-card__button {
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.habit-card__secondary-actions {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.habit-card__secondary-actions ion-button {
+  --padding-start: 0.5rem;
+  --padding-end: 0.5rem;
+  font-size: 0.85rem;
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   text-align: center;
+  min-height: 50vh;
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 1.5rem;
 }
 
 .loading-state {
@@ -414,14 +614,66 @@ function getFrequencyLabel(frecuencia: string | null | undefined): string {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   text-align: center;
+  min-height: 50vh;
+}
+
+.loading-state p {
+  margin-top: 1rem;
+  color: #666;
 }
 
 .error-message {
-  padding: 10px;
+  padding: 15px;
   text-align: center;
-  margin-top: 10px;
+  margin: 15px;
+  background-color: #ffebee;
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+}
+
+/* Filtros mejorados */
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+ion-searchbar {
+  padding: 0.5rem 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .habits-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .habit-card__secondary-actions {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .habit-card__secondary-actions ion-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .habits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .habits-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 </style>
 

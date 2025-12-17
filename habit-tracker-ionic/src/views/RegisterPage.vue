@@ -188,7 +188,7 @@ async function handleRegister() {
 
   try {
     await auth.register({
-      username: username.value,
+      name: username.value,
       email: email.value,
       password: password.value,
       passwordConfirm: passwordConfirm.value,

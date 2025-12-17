@@ -54,6 +54,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/EditHabitPage.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: () => import('@/views/ProfilePage.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

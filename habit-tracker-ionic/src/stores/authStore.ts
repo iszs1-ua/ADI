@@ -1,7 +1,7 @@
 // src/stores/authStore.ts
 import { defineStore } from 'pinia';
 import { pb } from '@/services/pb';
-import { login as loginService, register as registerService, logout as logoutService } from '@/services/auth';
+import { login as loginService, register as registerService, logout as logoutService, updateProfile as updateProfileService } from '@/services/auth';
 
 /**
  * STORE PINIA: AuthStore
@@ -74,13 +74,13 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Registra un nuevo usuario y lo autentica automáticamente
      * @param {Object} userData - Datos del usuario
-     * @param {string} userData.username - Nombre de usuario
+     * @param {string} userData.name - Nombre de usuario
      * @param {string} userData.email - Email del usuario
      * @param {string} userData.password - Contraseña
      * @param {string} userData.passwordConfirm - Confirmación de contraseña
      */
-    async register({ username, email, password, passwordConfirm }: {
-      username: string;
+    async register({ name, email, password, passwordConfirm }: {
+      name: string;
       email: string;
       password: string;
       passwordConfirm: string;
@@ -88,7 +88,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       this.error = null;
       try {
-        await registerService({ username, email, password, passwordConfirm });
+        await registerService({ name, email, password, passwordConfirm });
         // Asegurarse de que el authStore de PocketBase se actualice
         this.user = pb.authStore.model;
         // Verificar que la autenticación sea válida
@@ -113,6 +113,13 @@ export const useAuthStore = defineStore('auth', {
       logoutService();
       this.user = null;
       this.error = null;
+      
+      // Limpiar los hábitos del store para evitar que se muestren hábitos del usuario anterior
+      // Usar import dinámico para evitar dependencias circulares
+      import('@/stores/habitsStore').then(({ useHabitsStore }) => {
+        const habitsStore = useHabitsStore();
+        habitsStore.clearHabits();
+      });
     },
 
     /**
@@ -121,6 +128,27 @@ export const useAuthStore = defineStore('auth', {
      */
     refreshUser() {
       this.user = pb.authStore.model ?? null;
+    },
+
+    /**
+     * Actualiza el perfil del usuario
+     * @param {Object} userData - Datos a actualizar
+     * @param {string} userData.name - Nuevo nombre de usuario
+     */
+    async updateProfile({ name }: { name: string }) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const updated = await updateProfileService({ name });
+        this.user = updated;
+        return updated;
+      } catch (err: any) {
+        this.error = err.message || 'Error al actualizar el perfil';
+        console.error('Update profile error:', err);
+        throw err;
+      } finally {
+        this.loading = false;
+      }
     },
   },
 });
