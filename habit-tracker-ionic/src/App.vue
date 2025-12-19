@@ -31,6 +31,13 @@
           </ion-menu-toggle>
 
           <ion-menu-toggle auto-hide="false">
+            <ion-item button router-link="/notes">
+              <ion-icon slot="start" :icon="documentTextOutline"></ion-icon>
+              <ion-label>Diario</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+
+          <ion-menu-toggle auto-hide="false">
             <ion-item button @click="handleLogout">
               <ion-icon slot="start" :icon="logOutOutline"></ion-icon>
               <ion-label>Cerrar Sesión</ion-label>
@@ -63,7 +70,8 @@ import {
   listOutline, 
   personOutline, 
   logOutOutline, 
-  pieChartOutline // Importamos el icono del gráfico
+  pieChartOutline,
+  documentTextOutline
 } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
