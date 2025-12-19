@@ -167,6 +167,8 @@ Implementación del sistema de suscripción en tiempo real (**Realtime API**) de
 - **Sincronización Instantánea:** La lista de hábitos se actualiza automáticamente si ocurren cambios en el backend (creación, edición o borrado) desde el panel de administrador u otro cliente.
 - **Feedback Visual:** Se utilizan notificaciones nativas (`ToastController`) para avisar al usuario mediante mensajes flotantes cuando ocurre un cambio externo (ej: "Hábito actualizado remotamente").
 - **Optimización:** Gestión del ciclo de vida (`onMounted`/`onUnmounted`) para conectar y desconectar el socket de escucha, evitando consumo innecesario de recursos.
+> 📹 **VÍDEO DEMOSTRACIÓN:** > He grabado una prueba mostrando la actualización instantánea entre el panel de PocketBase y la App:
+> [👉 Clic aquí para ver el vídeo de prueba](https://drive.google.com/file/d/1E4RUuRdeLVapDo_woGrS5CZOL-fYtDGD/view?usp=sharing)
 
 ### ✅ Despliegue como PWA (+2 Puntos)
 La aplicación se ha convertido en una **Progressive Web App (PWA)** y se ha desplegado en producción:
