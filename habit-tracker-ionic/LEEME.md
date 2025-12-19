@@ -145,10 +145,10 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173`
    - Desliza un hábito y toca el icono de editar
    - O toca el icono de eliminar y confirma
 
-5. **Navegación (Nuevo):**
+5. **Navegación :**
    - Usa el botón de menú (tres líneas) en la esquina superior izquierda para navegar entre secciones.
 
-6. **Estadísticas (Nuevo):**
+6. **Estadísticas :**
    - Ve al menú -> "Estadísticas".
    - Verás un gráfico circular que se llena según completas tus hábitos.
 
@@ -156,6 +156,17 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173`
    - Ve al menú -> "Diario".
    - Pulsa el botón flotante (+) para crear una nota nueva.
    - Pulsa sobre una nota existente para editarla o borrarla.
+
+8. **Prueba de Tiempo Real (Realtime):**
+   - Abre la app en una ventana y el panel de PocketBase (`http://127.0.0.1:8090/_/`) en otra, poniéndolas lado a lado.
+   - Modifica, crea o borra un hábito desde la colección `habitos` en el panel de PocketBase.
+   - Observa cómo la aplicación se actualiza sola al instante y muestra una notificación de aviso.
+
+### ✅ Notificaciones en Tiempo Real (+1 Punto)
+Implementación del sistema de suscripción en tiempo real (**Realtime API**) de PocketBase:
+- **Sincronización Instantánea:** La lista de hábitos se actualiza automáticamente si ocurren cambios en el backend (creación, edición o borrado) desde el panel de administrador u otro cliente.
+- **Feedback Visual:** Se utilizan notificaciones nativas (`ToastController`) para avisar al usuario mediante mensajes flotantes cuando ocurre un cambio externo (ej: "Hábito actualizado remotamente").
+- **Optimización:** Gestión del ciclo de vida (`onMounted`/`onUnmounted`) para conectar y desconectar el socket de escucha, evitando consumo innecesario de recursos.
 
 ## Características Implementadas
 
@@ -171,6 +182,7 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173`
 - ✅ Navegación por Menú Lateral (Sidebar)
 - ✅ CRUD Completo de dos recursos (Hábitos y Notas)
 - ✅ Estadísticas visuales
+- ✅ Notificaciones y Sincronización Realtime (WebSockets)
 
 
 ## Notas Técnicas
