@@ -60,6 +60,13 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ProfilePage.vue'),
     meta: { requiresAuth: true },
   },
+  // 👇 AQUÍ AÑADES LA NUEVA RUTA DE ESTADÍSTICAS 👇
+  {
+    path: '/stats',
+    name: 'stats',
+    component: () => import('@/views/StatsPage.vue'),
+    meta: { requiresAuth: true }, // Importante: Protegida con Auth
+  },
 ]
 
 const router = createRouter({

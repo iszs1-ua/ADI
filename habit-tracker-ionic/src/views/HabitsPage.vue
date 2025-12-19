@@ -3,6 +3,9 @@
   <ion-page>
       <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-menu-button></ion-menu-button>
+        </ion-buttons>
         <ion-title>Mis Hábitos</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="router.push('/profile')">
@@ -236,6 +239,7 @@ import {
   IonText,
   alertController,
   modalController,
+  IonMenuButton, 
 } from '@ionic/vue';
 import {
   add,

@@ -4,9 +4,14 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button></ion-back-button>
+          <ion-back-button default-href="/habits"></ion-back-button>
         </ion-buttons>
+        
         <ion-title>Mi Perfil</ion-title>
+
+        <ion-buttons slot="end">
+          <ion-menu-button></ion-menu-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     
@@ -125,6 +130,7 @@ import {
   IonContent,
   IonButtons,
   IonBackButton,
+  IonMenuButton,
   IonButton,
   IonSpinner,
   IonText,
