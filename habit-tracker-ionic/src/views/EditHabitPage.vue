@@ -52,9 +52,9 @@
                   <ion-label position="stacked" class="habit-form__label">Descripción</ion-label>
                   <ion-textarea
                     v-model="descripcion"
-                    rows="4"
+                    :rows="4"
                     placeholder="Descripción opcional del hábito"
-                    maxlength="500"
+                    :maxlength="500"
                     class="habit-form__textarea"
                   ></ion-textarea>
                 </ion-item>

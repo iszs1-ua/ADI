@@ -49,7 +49,7 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Contenido</ion-label>
-            <ion-textarea v-model="form.contenido" rows="6" placeholder="Escribe aquí..."></ion-textarea>
+            <ion-textarea v-model="form.contenido" :rows="6" placeholder="Escribe aquí..."></ion-textarea>
           </ion-item>
           
           <div class="modal-actions">

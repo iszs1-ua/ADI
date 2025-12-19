@@ -18,12 +18,12 @@ export const useNotesStore = defineStore('notes', {
     },
     async addNota(titulo: string, contenido: string) {
       const nueva = await createNota({ titulo, contenido });
-      this.notas.unshift(nueva); // Añadir al principio
+      this.notas.unshift(nueva as unknown as Nota);
     },
     async editNota(id: string, titulo: string, contenido: string) {
       const actualizada = await updateNota(id, { titulo, contenido });
       const index = this.notas.findIndex(n => n.id === id);
-      if (index !== -1) this.notas[index] = actualizada;
+      if (index !== -1) this.notas[index] = actualizada as unknown as Nota;
     },
     async removeNota(id: string) {
       await deleteNota(id);

@@ -168,6 +168,16 @@ Implementación del sistema de suscripción en tiempo real (**Realtime API**) de
 - **Feedback Visual:** Se utilizan notificaciones nativas (`ToastController`) para avisar al usuario mediante mensajes flotantes cuando ocurre un cambio externo (ej: "Hábito actualizado remotamente").
 - **Optimización:** Gestión del ciclo de vida (`onMounted`/`onUnmounted`) para conectar y desconectar el socket de escucha, evitando consumo innecesario de recursos.
 
+### ✅ Despliegue como PWA (+2 Puntos)
+La aplicación se ha convertido en una **Progressive Web App (PWA)** y se ha desplegado en producción:
+
+- **Despliegue en la Nube:** El frontend está alojado en **Netlify**, accesible públicamente.
+  - 🌐 **URL de la App:** [https://mellifluous-peony-f79a65.netlify.app](https://mellifluous-peony-f79a65.netlify.app)
+- **Instalable (PWA):** Gracias a `vite-plugin-pwa`, la aplicación cumple los criterios para ser instalada en dispositivos móviles (Android/iOS) y escritorio.
+  - Incluye `manifest.json` configurado correctamente.
+  - Incluye `service workers` para funcionamiento offline y caché de recursos.
+- **Iconos y Tema:** Se han generado los iconos de diferentes tamaños para la pantalla de inicio y configurado el `theme_color`.
+
 ## Características Implementadas
 
 - ✅ Interfaz móvil nativa con componentes Ionic

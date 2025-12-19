@@ -28,7 +28,7 @@
           <ion-textarea
             v-model="descripcion"
             placeholder="Descripción opcional del hábito"
-            rows="4"
+            :rows="4"
           ></ion-textarea>
         </ion-item>
 

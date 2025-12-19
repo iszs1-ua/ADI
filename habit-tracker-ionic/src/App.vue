@@ -9,35 +9,35 @@
       
       <ion-content>
         <ion-list>
-          <ion-menu-toggle auto-hide="false">
+          <ion-menu-toggle :auto-hide="false">
             <ion-item button router-link="/habits">
               <ion-icon slot="start" :icon="listOutline"></ion-icon>
               <ion-label>Mis Hábitos</ion-label>
             </ion-item>
           </ion-menu-toggle>
 
-          <ion-menu-toggle auto-hide="false">
+          <ion-menu-toggle :auto-hide="false">
             <ion-item button router-link="/profile">
               <ion-icon slot="start" :icon="personOutline"></ion-icon>
               <ion-label>Mi Perfil</ion-label>
             </ion-item>
           </ion-menu-toggle>
 
-          <ion-menu-toggle auto-hide="false">
+          <ion-menu-toggle :auto-hide="false">
             <ion-item button router-link="/stats">
               <ion-icon slot="start" :icon="pieChartOutline"></ion-icon>
               <ion-label>Estadísticas</ion-label>
             </ion-item>
           </ion-menu-toggle>
 
-          <ion-menu-toggle auto-hide="false">
+          <ion-menu-toggle :auto-hide="false">
             <ion-item button router-link="/notes">
               <ion-icon slot="start" :icon="documentTextOutline"></ion-icon>
               <ion-label>Diario</ion-label>
             </ion-item>
           </ion-menu-toggle>
 
-          <ion-menu-toggle auto-hide="false">
+          <ion-menu-toggle :auto-hide="false">
             <ion-item button @click="handleLogout">
               <ion-icon slot="start" :icon="logOutOutline"></ion-icon>
               <ion-label>Cerrar Sesión</ion-label>

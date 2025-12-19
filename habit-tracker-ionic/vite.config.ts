@@ -4,12 +4,35 @@ import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    legacy()
+    legacy(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'Habit Tracker',
+        short_name: 'Habits',
+        description: 'Gestor de hábitos con Ionic y Vue',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'assets/icon/icon.png', // Asegúrate de tener una imagen aquí (en la carpeta public)
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'assets/icon/icon.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ],
   resolve: {
     alias: {
