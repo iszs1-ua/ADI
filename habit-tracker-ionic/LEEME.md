@@ -10,7 +10,7 @@ Esta aplicación es la versión móvil del "Habit Tracker" (Gestor de Hábitos) 
 ## Tecnologías Utilizadas
 - **Framework:** Ionic 8 para Vue 3
 - **Lenguaje:** TypeScript
-- **Estado:** Pinia (Stores para Auth y Hábitos)
+- **Estado:** Pinia (Stores para Auth, Hábitos y Notas)
 - **Routing:** Vue Router con Ionic Router
 - **Backend:** PocketBase
 - **Build Tool:** Vite
@@ -47,6 +47,23 @@ Esta aplicación es la versión móvil del "Habit Tracker" (Gestor de Hábitos) 
 - `ion-modal`: Modal de detalles
 - `ion-alert`: Confirmaciones
 
+## Requisitos Adicionales Implementados (+1 Punto)
+
+### ✅ CRUD de Segundo Recurso: Diario (Notas)
+Se ha implementado una entidad completa adicional independiente de los hábitos:
+- **Pantalla:** `NotesPage.vue` accesible desde el menú lateral.
+- **Crear:** Modal con formulario para título y contenido de la nota.
+- **Leer:** Listado de notas personales guardadas en PocketBase (Colección `notas`).
+- **Actualizar:** Al tocar una tarjeta, se abre el modal para editar su contenido.
+- **Eliminar:** Opción dentro del modal de edición para borrar la nota.
+
+### ✅ Extras de UI/UX
+- **Sidebar Menu:** Navegación lateral (`ion-menu`) integrada en toda la aplicación para acceder a Hábitos, Perfil, Estadísticas y Diario.
+- **Pantalla de Estadísticas:** Nueva vista `StatsPage.vue` con:
+  - Gráfico circular de progreso diario (implementado con CSS dinámico).
+  - Tarjetas de resumen con contadores de hábitos totales vs. completados.
+  - Lista de logros del día.
+
 ## Estructura del Proyecto
 
 ```
@@ -58,15 +75,20 @@ habit-tracker-ionic/
 │   │   ├── pb.ts                    # Cliente PocketBase
 │   │   ├── auth.ts                  # Servicios de autenticación
 │   │   └── habitos.ts               # Servicios de hábitos
+│   │   └── notas.ts                 # Servicios de notas (Diario)
 │   ├── stores/
 │   │   ├── authStore.ts             # Store de autenticación
 │   │   └── habitsStore.ts           # Store de hábitos
+│   │   └── notesStore.ts            # Store de notas
 │   ├── views/
 │   │   ├── LoginPage.vue            # Pantalla de login
 │   │   ├── RegisterPage.vue         # Pantalla de registro
 │   │   ├── HabitsPage.vue           # Pantalla principal (lista)
 │   │   ├── NewHabitPage.vue         # Crear hábito
 │   │   └── EditHabitPage.vue        # Editar hábito
+│   │   ├── ProfilePage.vue          # Perfil de usuario
+│   │   ├── StatsPage.vue            # Estadísticas y progreso
+│   │   └── NotesPage.vue            # Diario (CRUD Notas)
 │   ├── router/
 │   │   └── index.ts                 # Configuración de rutas
 │   └── main.ts                      # Punto de entrada
@@ -123,6 +145,18 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173`
    - Desliza un hábito y toca el icono de editar
    - O toca el icono de eliminar y confirma
 
+5. **Navegación (Nuevo):**
+   - Usa el botón de menú (tres líneas) en la esquina superior izquierda para navegar entre secciones.
+
+6. **Estadísticas (Nuevo):**
+   - Ve al menú -> "Estadísticas".
+   - Verás un gráfico circular que se llena según completas tus hábitos.
+
+7. **Diario/Notas (Nuevo CRUD):**
+   - Ve al menú -> "Diario".
+   - Pulsa el botón flotante (+) para crear una nota nueva.
+   - Pulsa sobre una nota existente para editarla o borrarla.
+
 ## Características Implementadas
 
 - ✅ Interfaz móvil nativa con componentes Ionic
@@ -134,6 +168,10 @@ Esto iniciará el servidor de desarrollo en `http://localhost:5173`
 - ✅ Modales para ver detalles
 - ✅ Items deslizables para acciones rápidas
 - ✅ Botón flotante para acciones principales
+- ✅ Navegación por Menú Lateral (Sidebar)
+- ✅ CRUD Completo de dos recursos (Hábitos y Notas)
+- ✅ Estadísticas visuales
+
 
 ## Notas Técnicas
 
