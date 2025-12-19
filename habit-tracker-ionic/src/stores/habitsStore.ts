@@ -1,4 +1,6 @@
 // src/stores/habitsStore.ts
+import { pb } from '@/services/pb';
+import { toastController } from '@ionic/vue';
 import { defineStore } from 'pinia';
 import { 
   listMyHabits, 
@@ -307,6 +309,73 @@ export const useHabitsStore = defineStore('habits', {
       this.searchQuery = '';
       this.frequencyFilter = '';
     },
+    /**
+     * ACTIVAR REALTIME (Suscripción en tiempo real)
+     */
+    async subscribeToRealtime() {
+      // Nos suscribimos a "todo" (*) en la colección 'habitos'
+      pb.collection('habitos').subscribe('*', async (e) => {
+        console.log('⚡ Cambio en tiempo real detectado:', e.action, e.record);
+
+        // CASO 1: CREAR
+        if (e.action === 'create') {
+          if (e.record.user === pb.authStore.model?.id) {
+            this.habits.unshift(e.record as unknown as Habit);
+            this.totalItems++;
+            
+            // Notificación visual
+            const toast = await toastController.create({
+              message: '✨ ¡Nuevo hábito recibido en tiempo real!',
+              duration: 2000,
+              color: 'success',
+              position: 'top'
+            });
+            await toast.present();
+          }
+        }
+
+        // CASO 2: ACTUALIZAR
+        if (e.action === 'update') {
+          const index = this.habits.findIndex(h => h.id === e.record.id);
+          if (index !== -1) {
+            this.habits[index] = { ...this.habits[index], ...e.record } as unknown as Habit;
+            
+            // Notificación visual
+            const toast = await toastController.create({
+              message: '🔄 Hábito actualizado remotamente',
+              duration: 2000,
+              color: 'primary',
+              position: 'top'
+            });
+            await toast.present();
+          }
+        }
+
+        // CASO 3: ELIMINAR
+        if (e.action === 'delete') {
+          this.habits = this.habits.filter(h => h.id !== e.record.id);
+          this.totalItems--;
+          
+          // Notificación visual
+          const toast = await toastController.create({
+             message: '🗑️ Hábito eliminado remotamente',
+             duration: 2000,
+             color: 'danger',
+             position: 'top'
+          });
+          await toast.present();
+        }
+      });
+    },
+
+    /**
+     * DESACTIVAR REALTIME
+     * Importante llamar a esto al salir de la pantalla para no consumir recursos.
+     */
+    unsubscribeFromRealtime() {
+      pb.collection('habitos').unsubscribe();
+      console.log('🔌 Desconectado del Realtime');
+    }
   },
 });
 

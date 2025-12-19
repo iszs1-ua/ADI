@@ -210,8 +210,7 @@
  * - handleLogout(): Cierra sesión y redirige al login.
  * - getFrequencyLabel(frecuencia): Utilidad para traducir códigos ('daily') a texto ('Diario').
  */
-
-import { ref, computed, onMounted, watch, onActivated } from 'vue';
+import { ref, computed, onMounted, watch, onActivated, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   IonPage,
@@ -240,6 +239,7 @@ import {
   alertController,
   modalController,
   IonMenuButton, 
+  toastController,
 } from '@ionic/vue';
 import {
   add,
@@ -311,10 +311,19 @@ async function initializeHabits() {
 }
 
 /**
- * Carga los hábitos al montar el componente
+ * Carga los hábitos al montar y activa el Realtime
  */
 onMounted(async () => {
-  await initializeHabits();
+  await initializeHabits();       // 1. Tu carga normal (NO la borres)
+  habitsStore.subscribeToRealtime(); // 2. Activar la escucha en tiempo real
+});
+
+/**
+ * Desactiva el Realtime al salir de la pantalla
+ * (Para no gastar batería ni recursos)
+ */
+onUnmounted(() => {
+  habitsStore.unsubscribeFromRealtime();
 });
 
 /**
