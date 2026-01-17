@@ -1,7 +1,10 @@
 // src/services/habitos.js
-import { pb, requireAuth } from './pb.js';
+// REFACTORIZADO: Ahora usa el Patrón Adapter para soportar múltiples backends
 
-// Mapeo opcional por si los <option> del HTML no coinciden 1:1 con PB
+import { getAdapter } from './adapterService.js';
+import { requireAuth } from './pb.js';
+
+// Mapeo opcional por si los <option> del HTML no coinciden 1:1 con la frecuencia
 const FREQ_MAP = {
   daily: 'daily',
   weekly: 'weekly',
@@ -12,24 +15,61 @@ const FREQ_MAP = {
 
 const normalizeFrequency = (f) => (FREQ_MAP[f] ?? f)?.trim();
 
+/**
+ * Crea un nuevo hábito
+ * @param {Object} data - {nombre, descripcion, frecuencia}
+ * @returns {Promise<Object>} - Hábito creado
+ */
 export async function createHabit({ nombre, descripcion, frecuencia = 'daily' }) {
   const u = requireAuth();
-  return pb.collection('habitos').create({
+  const adapter = getAdapter();
+  
+  const habit = await adapter.createHabit({
     nombre,
     descripcion,
-    frecuencia,
-    completado: false,
-    user: u.id,   // <--- CORREGIDO: antes era 'usuario'
+    frecuencia: normalizeFrequency(frecuencia),
+    user: u.id
   });
+  
+  // Retornar en formato compatible (como PocketBase)
+  return habit;
 }
 
+/**
+ * Lista los hábitos del usuario actual
+ * @param {Object} options - {page, perPage, sort}
+ * @returns {Promise<{items: Array, totalItems: number, page: number, perPage: number}>}
+ */
 export async function listMyHabits({ page = 1, perPage = 50, sort = '-created' } = {}) {
   const u = requireAuth();
-  // CORREGIDO: cambiamos 'usuario' por 'user'
-  const userFilter = `(user="${u.id}" || user.id ?= "${u.id}")`;
-  return pb.collection('habitos').getList(page, perPage, { sort, filter: userFilter });
+  const adapter = getAdapter();
+  
+  // Convertir sort de PocketBase a formato del adaptador
+  const sortField = sort.replace('-', '') || 'created';
+  const sortDesc = sort.startsWith('-');
+  const sortValue = sortDesc ? `-${sortField}` : sortField;
+  
+  const result = await adapter.listHabits({
+    page,
+    perPage,
+    sort: sortValue,
+    userId: u.id
+  });
+  
+  // Retornar en formato compatible con PocketBase
+  return {
+    items: result.items,
+    totalItems: result.totalItems,
+    page: result.page,
+    perPage: result.perPage
+  };
 }
 
+/**
+ * Busca hábitos por texto y/o frecuencia
+ * @param {Object} options - {q, frecuencia, page, perPage, sort}
+ * @returns {Promise<{items: Array, totalItems: number}>}
+ */
 export async function searchMyHabits({
   q = '',
   frecuencia,
@@ -38,52 +78,76 @@ export async function searchMyHabits({
   sort = '-created',
 } = {}) {
   const u = requireAuth();
-
-  const parts = [
-    // CORREGIDO: cambiamos 'usuario' por 'user'
-    `(user="${u.id}" || user.id ?= "${u.id}")`,
-  ];
-
-  if (q) {
-    const safe = q.replace(/"/g, '\\"');
-    parts.push(`(nombre ~ "${safe}" || descripcion ~ "${safe}")`);
-  }
-
-  if (frecuencia) {
-    const f = normalizeFrequency(frecuencia);
-    parts.push(`(frecuencia="${f}" || frecuencia ?= "${f}")`);
-  }
-
-  const filter = parts.join(' && ');
-  console.debug('[searchMyHabits] filter =>', filter);
-
-  return pb.collection('habitos').getList(page, perPage, { sort, filter });
+  const adapter = getAdapter();
+  
+  // Convertir sort de PocketBase a formato del adaptador
+  const sortField = sort.replace('-', '') || 'created';
+  const sortDesc = sort.startsWith('-');
+  const sortValue = sortDesc ? `-${sortField}` : sortField;
+  
+  const result = await adapter.searchHabits({
+    q,
+    frecuencia: frecuencia ? normalizeFrequency(frecuencia) : undefined,
+    page,
+    perPage,
+    sort: sortValue,
+    userId: u.id
+  });
+  
+  console.debug('[searchMyHabits] result =>', result);
+  
+  // Retornar en formato compatible con PocketBase
+  return {
+    items: result.items,
+    totalItems: result.totalItems,
+    page: result.page,
+    perPage: result.perPage
+  };
 }
 
-/** NUEVA: solo filtra por frecuencia (y usuario). */
+/**
+ * Filtra hábitos solo por frecuencia
+ * @param {Object} options - {frecuencia, page, perPage, sort}
+ * @returns {Promise<{items: Array, totalItems: number}>}
+ */
 export async function filterMyHabitsByFrequency({
   frecuencia,
   page = 1,
   perPage = 50,
   sort = '-created',
 } = {}) {
-  const u = requireAuth();
-
   if (!frecuencia) return listMyHabits({ page, perPage, sort });
-
-  const f = normalizeFrequency(frecuencia);
-
-  const parts = [
-    // CORREGIDO: cambiamos 'usuario' por 'user'
-    `(user="${u.id}" || user.id ?= "${u.id}")`,
-    `(frecuencia="${f}" || frecuencia ?= "${f}")`
-  ];
-  const filter = parts.join(' && ');
-  console.debug('[filterMyHabitsByFrequency] filter =>', filter);
-
-  return pb.collection('habitos').getList(page, perPage, { sort, filter });
+  
+  return searchMyHabits({ q: '', frecuencia, page, perPage, sort });
 }
 
-export const getHabit    = (id)       => pb.collection('habitos').getOne(id);
-export const updateHabit = (id, data) => pb.collection('habitos').update(id, data);
-export const deleteHabit = (id)       => pb.collection('habitos').delete(id);
+/**
+ * Obtiene un hábito por ID
+ * @param {string} id
+ * @returns {Promise<Object>}
+ */
+export async function getHabit(id) {
+  const adapter = getAdapter();
+  return await adapter.getHabit(id);
+}
+
+/**
+ * Actualiza un hábito
+ * @param {string} id
+ * @param {Object} data
+ * @returns {Promise<Object>}
+ */
+export async function updateHabit(id, data) {
+  const adapter = getAdapter();
+  return await adapter.updateHabit(id, data);
+}
+
+/**
+ * Elimina un hábito
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
+export async function deleteHabit(id) {
+  const adapter = getAdapter();
+  await adapter.deleteHabit(id);
+}

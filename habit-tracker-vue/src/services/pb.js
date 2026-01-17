@@ -1,24 +1,75 @@
 // src/services/pb.js
-import PocketBase from 'pocketbase';
+// REFACTORIZADO: Ahora usa el Patrón Adapter
+// Este archivo mantiene la misma interfaz para compatibilidad con código existente
+// pero internamente usa el adaptador para soportar múltiples backends
 
-/*
- * SERVICIO: Cliente PocketBase
- * Instancia única del cliente SDK de PocketBase para toda la aplicación.
- * Conecta con el backend en localhost:8090.
- * Exporta funciones auxiliares para verificar sesión rápidamente.
+import { getAdapter } from './adapterService.js';
+import { config } from '../config.js';
+import { getPocketBaseInstance } from './pb-instance.js';
+
+/**
+ * Retorna la instancia del adaptador actual
+ * (Mantiene compatibilidad con código que espera 'pb')
  */
+export function getPb() {
+  return getAdapter();
+}
 
-export const pb = new PocketBase('http://127.0.0.1:8090'); // ajusta si tu servidor usa otra IP o puerto
-
+/**
+ * Obtiene el usuario actual
+ * Compatible con el código existente que usa currentUser()
+ */
 export function currentUser() {
-  return pb.authStore.model ?? null;
+  // Si usamos PocketBase, usar la instancia directa para obtener la sesión
+  if (config.DEFAULT_BACKEND === 'pocketbase') {
+    const pb = getPocketBaseInstance();
+    return pb?.authStore.model ?? null;
+  }
+  
+  // Para otros backends, usar el adaptador
+  const adapter = getAdapter();
+  return adapter.getCurrentUser();
 }
 
+/**
+ * Verifica si el usuario está autenticado
+ * Compatible con el código existente que usa isLogged()
+ */
 export function isLogged() {
-  return !!pb.authStore.isValid;
+  // Si usamos PocketBase, usar la instancia directa para verificar sesión
+  if (config.DEFAULT_BACKEND === 'pocketbase') {
+    const pb = getPocketBaseInstance();
+    return pb?.authStore.isValid ?? false;
+  }
+  
+  // Para otros backends, usar el adaptador
+  const adapter = getAdapter();
+  return adapter.isAuthenticated();
 }
 
+/**
+ * Requiere autenticación, lanza error si no está autenticado
+ * Compatible con el código existente que usa requireAuth()
+ */
 export function requireAuth() {
-  if (!isLogged()) throw new Error('No autenticado');
-  return currentUser();
+  if (!isLogged()) {
+    throw new Error('No autenticado');
+  }
+  const user = currentUser();
+  if (!user) {
+    throw new Error('No autenticado');
+  }
+  return user;
 }
+
+// Exportar instancia directa de PocketBase para compatibilidad
+// Solo disponible cuando el backend es PocketBase
+export const pb = new Proxy({}, {
+  get(target, prop) {
+    const instance = getPocketBaseInstance();
+    if (!instance) {
+      throw new Error('PocketBase solo está disponible cuando DEFAULT_BACKEND es "pocketbase"');
+    }
+    return instance[prop];
+  }
+});

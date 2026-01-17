@@ -79,6 +79,10 @@
         </p>
       </form>
 
+      <div class="auth-form__switch-container">
+        <BackendSwitcher />
+      </div>
+      
       <p class="auth-form__switch">
         ¿Ya tienes cuenta?
         <router-link to="/login" class="auth-form__link">Inicia sesión</router-link>
@@ -112,6 +116,7 @@
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import BackendSwitcher from '@/components/BackendSwitcher.vue';
 
 const username = ref('');
 const email = ref('');
@@ -222,6 +227,12 @@ function triggerShake() {
 
 .auth-form__button--shake {
   animation: shake 0.5s;
+}
+
+.auth-form__switch-container {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
 }
 
 @keyframes shake {

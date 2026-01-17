@@ -45,11 +45,14 @@
             </v-form>
           </v-card-text>
           
-          <v-card-actions class="justify-center pa-4">
-            <span class="text-body-2">¿No tienes cuenta? </span>
-            <router-link to="/register" style="text-decoration: none; margin-left: 5px;">
-              Regístrate aquí
-            </router-link>
+          <v-card-actions class="justify-center pa-4 flex-column">
+            <BackendSwitcher class="mb-4" />
+            <div>
+              <span class="text-body-2">¿No tienes cuenta? </span>
+              <router-link to="/register" style="text-decoration: none; margin-left: 5px;">
+                Regístrate aquí
+              </router-link>
+            </div>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -67,6 +70,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import BackendSwitcher from '@/components/BackendSwitcher.vue';
 
 const email = ref('');
 const password = ref('');

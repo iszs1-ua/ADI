@@ -1,34 +1,51 @@
-// public/services/marcas.js
-import { pb, requireAuth } from './pb.js';
+// src/services/marcas.js
+// REFACTORIZADO: Ahora usa el Patrón Adapter para soportar múltiples backends
 
-const startOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
-const iso = (d) => d.toISOString();
+import { getAdapter } from './adapterService.js';
+import { requireAuth } from './pb.js';
 
+/**
+ * Crea una marca (tracking de hábito completado)
+ * @param {Object} data - {habitId, date}
+ * @returns {Promise<Object>} - Marca creada
+ */
 export async function createMark({ habitId, date = new Date() }) {
   const u = requireAuth();
-  return pb.collection('marcas').create({ usuario: u.id, habit: habitId, fecha: iso(date) });
+  const adapter = getAdapter();
+  
+  return await adapter.createMark({
+    habitId,
+    userId: u.id,
+    date
+  });
 }
 
+/**
+ * Elimina la marca del día actual para un hábito
+ * @param {Object} data - {habitId}
+ * @returns {Promise<boolean>} - true si se eliminó, false si no había marca
+ */
 export async function deleteTodayMark({ habitId }) {
   const u = requireAuth();
-  const today = startOfDay(new Date());
-  const next  = new Date(today.getTime() + 24*60*60*1000);
-  const res = await pb.collection('marcas').getList(1, 1, {
-    filter: `usuario="${u.id}" && habit="${habitId}" && fecha >= "${iso(today)}" && fecha < "${iso(next)}"`
+  const adapter = getAdapter();
+  
+  return await adapter.deleteTodayMark({
+    habitId,
+    userId: u.id
   });
-  if (res.items.length) {
-    await pb.collection('marcas').delete(res.items[0].id);
-    return true;
-  }
-  return false;
 }
 
+/**
+ * Verifica si hay una marca para el día actual
+ * @param {Object} data - {habitId}
+ * @returns {Promise<boolean>}
+ */
 export async function hasTodayMark({ habitId }) {
   const u = requireAuth();
-  const today = startOfDay(new Date());
-  const next  = new Date(today.getTime() + 24*60*60*1000);
-  const res = await pb.collection('marcas').getList(1, 1, {
-    filter: `usuario="${u.id}" && habit="${habitId}" && fecha >= "${iso(today)}" && fecha < "${iso(next)}"`
+  const adapter = getAdapter();
+  
+  return await adapter.hasTodayMark({
+    habitId,
+    userId: u.id
   });
-  return res.items.length > 0;
 }
